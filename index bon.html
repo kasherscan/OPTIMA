@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#080808"/>
+  <title>Optima</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body style="margin:0;padding:0;background:#080808">
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+var CSS_RULES = [
+  "@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700;800;900&family=Antonio:wght@700&family=Anton&display=swap');",
+  "*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }",
+  "body { font-family: DM Sans, sans-serif; -webkit-font-smoothing: antialiased; }",
+  "@keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }",
+  "@keyframes slideUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:none; } }",
+  "@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }",
+  ".fu { animation: fadeUp .5s cubic-bezier(.16,1,.3,1) both; }",
+  ".su { animation: slideUp .4s cubic-bezier(.16,1,.3,1) both; }",
+  "::-webkit-scrollbar { width:0; height:0; }",
+].join("\n");
+
+// ---- LOGO -----------------------------------------------------------------
+function OptimaLogo(props) {
+  var size = props.size || 120;
+  var h = Math.round(size * 0.42);
+  return (
+    <svg width={size} height={h} viewBox="0 0 320 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* O - Antonio Bold, olive shadow */}
+      <text x="4" y="80" fontFamily="Antonio, sans-serif" fontSize="86" fontWeight="700" fill="#5a6000" opacity="0.55" dx="3" dy="3">O</text>
+      <text x="4" y="80" fontFamily="Antonio, sans-serif" fontSize="86" fontWeight="700" fill="#ffffff">O</text>
+      {/* ptima - Anton */}
+      <text x="70" y="80" fontFamily="Anton, sans-serif" fontSize="66" fontWeight="400" fill="#ffffff">ptima</text>
+      {/* Arrow 1 - Yellow - pointing top-right (L shape rotated) */}
+      <rect x="270" y="8"  width="36" height="10" rx="5" fill="#d4e600" />
+      <rect x="296" y="8"  width="10" height="36" rx="5" fill="#d4e600" />
+      {/* Arrow 2 - Beige - pointing top-right, offset below-left */}
+      <rect x="258" y="26" width="36" height="10" rx="5" fill="#c8b89a" />
+      <rect x="284" y="26" width="10" height="36" rx="5" fill="#c8b89a" />
+    </svg>
+  );
+}
+
+
+
+// ---- DATA ------------------------------------------------------------------
+
+var COURS = [
+  { id:"c1", nom:"Eveil Danse",    niveau:"3-5 ans",   prof:"Sophie Martin", jour:"Lundi",    heure:"16h00", salle:"A", places:12, inscrits:9,  couleur:"#a21caf", bg:"#f5d0fe", prix_carte:12 },
+  { id:"c2", nom:"Jazz Debutants", niveau:"6-9 ans",   prof:"Sophie Martin", jour:"Lundi",    heure:"17h00", salle:"B", places:15, inscrits:10, couleur:"#1d4ed8", bg:"#bfdbfe", prix_carte:14 },
+  { id:"c3", nom:"Classique",      niveau:"8-12 ans",  prof:"Marie Dupuis",  jour:"Mardi",    heure:"17h30", salle:"A", places:12, inscrits:10, couleur:"#065f46", bg:"#a7f3d0", prix_carte:14 },
+  { id:"c4", nom:"Hip-Hop Ados",   niveau:"12-17 ans", prof:"Karim Bel",     jour:"Mercredi", heure:"18h00", salle:"C", places:20, inscrits:12, couleur:"#991b1b", bg:"#fecaca", prix_carte:15 },
+  { id:"c5", nom:"Modern Jazz",    niveau:"10 ans +",  prof:"Marie Dupuis",  jour:"Jeudi",    heure:"17h30", salle:"B", places:15, inscrits:8,  couleur:"#92400e", bg:"#fde68a", prix_carte:14 },
+  { id:"c6", nom:"Contemporain",   niveau:"14 ans +",  prof:"Karim Bel",     jour:"Samedi",   heure:"10h00", salle:"A", places:15, inscrits:11, couleur:"#3730a3", bg:"#c7d2fe", prix_carte:15 },
+  { id:"c7", nom:"Hip-Hop Adults", niveau:"Adultes",   prof:"Karim Bel",     jour:"Vendredi", heure:"20h00", salle:"C", places:20, inscrits:6,  couleur:"#7c2d12", bg:"#fed7aa", prix_carte:15 },
+  { id:"c8", nom:"Zumba",          niveau:"Adultes",   prof:"Sophie Martin", jour:"Samedi",   heure:"11h00", salle:"B", places:20, inscrits:14, couleur:"#065f46", bg:"#a7f3d0", prix_carte:12 },
+];
+
+var MES_COURS = ["c2", "c3"];
+
+var TAILLES = [
+  "2 ans","3 ans","4 ans","5 ans","6 ans","7 ans","8 ans","9 ans","10 ans",
+  "11 ans","12 ans","13 ans","14 ans","15 ans","16 ans",
+  "XS","S","M","L","XL","XXL",
+];
+
+var COSTUMES = {
+  c1:{ prix:28 }, c2:{ prix:35 }, c3:{ prix:45 }, c4:{ prix:40 },
+  c5:{ prix:42 }, c6:{ prix:38 }, c7:{ prix:40 }, c8:{ prix:35 },
+};
+
+var STAGES = [
+  { id:"s1", type:"stage", nom:"Stage Hip-Hop Ete", discipline:"Hip-Hop", prof:"Karim Bel", vacances:"Ete", debut:"7 juil.", fin:"11 juil.", horaires:"9h-12h", salle:"C", places:20, inscrits:14, prix:90, age:"8-17 ans", desc:"Une semaine intensive pour progresser en Hip-Hop urbain.", couleur:"#991b1b", bg:"#fecaca", inscriptions:["Lucas Roux"] },
+  { id:"s2", type:"stage", nom:"Stage Classique Printemps", discipline:"Classique", prof:"Marie Dupuis", vacances:"Printemps", debut:"14 avr.", fin:"18 avr.", horaires:"10h-13h", salle:"A", places:12, inscrits:8, prix:80, age:"8-14 ans", desc:"Stage technique de danse classique.", couleur:"#065f46", bg:"#a7f3d0", inscriptions:[] },
+];
+
+var WORKSHOPS = [
+  { id:"w1", type:"workshop", nom:"Workshop Contemporain", discipline:"Contemporain", prof:"Karim Bel", date:"22 mars", horaires:"14h-17h", salle:"A", places:15, inscrits:11, prix:35, age:"14 ans +", desc:"Atelier d'exploration du mouvement contemporain.", couleur:"#3730a3", bg:"#c7d2fe", inscriptions:["Emma Dupont"] },
+  { id:"w2", type:"workshop", nom:"Workshop Jazz Adultes", discipline:"Jazz", prof:"Sophie Martin", date:"5 avr.", horaires:"10h-13h", salle:"B", places:15, inscrits:6, prix:30, age:"Adultes", desc:"Atelier Jazz dedie aux adultes.", couleur:"#1d4ed8", bg:"#bfdbfe", inscriptions:[] },
+];
+
+var ANNONCES = [
+  { id:"a1", auteur:"Optima", avatar:"DF", date:"Aujourd'hui 10h30", type:"important", titre:"Gala de fin d'annee - 14 juin !", texte:"Places limitees ! Le gala annuel se tiendra le 14 juin au Theatre de Vitrolles.", likes:24, liked:false },
+  { id:"a2", auteur:"Optima", avatar:"DF", date:"Hier 18h00", type:"info", titre:"Cours de rattrapage Classique", texte:"Un cours de rattrapage est organise le samedi 24 mai a 13h00 en salle A.", likes:12, liked:false },
+  { id:"a3", auteur:"Sophie Martin", avatar:"SM", date:"Il y a 3 jours", type:"normal", titre:"Fin de saison", texte:"Rappel : les cours s'arretent le 7 juin. Reprise en septembre.", likes:31, liked:true },
+];
+
+var MSGS_INIT = [
+  { id:"conv1", contact:"Ecole Optima", avatar:"DF", nonLus:2, lastMsg:"Inscription validee !", lastTime:"10h30",
+    messages:[
+      { id:"m1", from:"school", text:"Bonjour Emma ! Bienvenue a Optima.", time:"09h00" },
+      { id:"m2", from:"me",     text:"Merci ! Faut-il des chaussons pour le classique ?", time:"10h15" },
+      { id:"m3", from:"school", text:"Oui, des demi-pointes sont requises.", time:"10h28" },
+      { id:"m4", from:"school", text:"Inscription validee !", time:"10h30" },
+    ]
+  },
+  { id:"conv2", contact:"Sophie Martin", avatar:"SM", nonLus:0, lastMsg:"A mardi !", lastTime:"Hier",
+    messages:[
+      { id:"m5", from:"school", text:"Le cours de mardi commencera a 17h15.", time:"14h00" },
+      { id:"m6", from:"me",     text:"Pas de probleme !", time:"14h30" },
+      { id:"m7", from:"school", text:"A mardi !", time:"14h32" },
+    ]
+  },
+];
+
+var GALA = {
+  titre:"GALA DE FIN D'ANNEE 2025", date:"Samedi 14 Juin 2025", heure:"19h30",
+  lieu:"Theatre de Vitrolles", adresse:"Avenue du Jardin, 13127 Vitrolles",
+  placesTotal:350, placesVendues:247,
+  tarifs:[
+    { id:"t1", nom:"Plein tarif",        prix:15, desc:"Public general" },
+    { id:"t2", nom:"Adherent / Famille", prix:10, desc:"Membre de l'ecole" },
+    { id:"t3", nom:"Enfant - 12 ans",    prix:5,  desc:"Moins de 12 ans" },
+  ],
+  programme:[
+    { heure:"19h30", titre:"Ouverture des portes" },
+    { heure:"20h00", titre:"Debut du spectacle" },
+    { heure:"20h45", titre:"Entracte (20 min)" },
+    { heure:"21h05", titre:"Hip-Hop, Classique et Contemporain" },
+    { heure:"22h00", titre:"Finale" },
+  ],
+};
+
+var DOCS = [
+  { id:"cert",    label:"Certificat medical",    short:"Certificat d'aptitude" },
+  { id:"dossier", label:"Dossier signe",         short:"Dossier d'inscription" },
+  { id:"rib",     label:"RIB",                   short:"Pour prelevement auto" },
+  { id:"assur",   label:"Attestation assurance",  short:"Responsabilite civile" },
+  { id:"regl",    label:"Reglement signe",        short:"Reglement interieur" },
+];
+
+var INIT_DOSSIERS = {
+  "1":{ cert:"ok",       dossier:"ok",       rib:"ok",       assur:"ok",       regl:"ok"       },
+  "2":{ cert:"manquant", dossier:"manquant", rib:"manquant", assur:"manquant", regl:"manquant" },
+  "3":{ cert:"ok",       dossier:"ok",       rib:"ok",       assur:"manquant", regl:"ok"       },
+  "4":{ cert:"ok",       dossier:"manquant", rib:"ok",       assur:"ok",       regl:"manquant" },
+  "5":{ cert:"ok",       dossier:"ok",       rib:"ok",       assur:"ok",       regl:"ok"       },
+};
+
+var ELEVES = [
+  { id:"1", prenom:"Emma",  nom:"Dupont",  email:"emma@gmail.com",   phone:"06 12 34 56 78", cours:["c2","c3"], paiement:"paid",    statut:"validated", nonLus:2 },
+  { id:"2", prenom:"Leo",   nom:"Martin",  email:"leo@gmail.com",    phone:"06 98 76 54 32", cours:["c4"],      paiement:"pending", statut:"pending",   nonLus:0 },
+  { id:"3", prenom:"Chloe", nom:"Bernard", email:"chloe@gmail.com",  phone:"07 23 45 67 89", cours:["c3","c5"], paiement:"paid",    statut:"validated", nonLus:1 },
+  { id:"4", prenom:"Noah",  nom:"Petit",   email:"noah@gmail.com",   phone:"06 55 44 33 22", cours:["c1"],      paiement:"overdue", statut:"validated", nonLus:0 },
+  { id:"5", prenom:"Ines",  nom:"Moreau",  email:"ines@gmail.com",   phone:"07 11 22 33 44", cours:["c4","c6"], paiement:"paid",    statut:"validated", nonLus:0 },
+];
+
+var TUILES = [
+  { id:"cours",    label:"Mes cours",          sub:"Planning et presences",  bg:"#FDE8F0", accent:"#8B1A4A" },
+  { id:"carte",    label:"A la carte",         sub:"Reserver une seance",    bg:"#EDE8F8", accent:"#5B2D82" },
+  { id:"stages",   label:"Stages et Workshops",sub:"Vacances et evenements", bg:"#E8F4F8", accent:"#1A5F7A" },
+  { id:"gala",     label:"Gala 2025",          sub:"14 juin - Billetterie",  bg:"#F8EDE8", accent:"#8B3A1A", badge:"Places dispo" },
+  { id:"messages", label:"Messages",           sub:"Contacter l'ecole",      bg:"#FDEEF5", accent:"#7A1A5B", badge:"2 non lus" },
+  { id:"profil",   label:"Mon profil",         sub:"Abonnement et infos",    bg:"#EDF8F0", accent:"#1A6B40" },
+];
+
+var AVC = [
+  ["#e0e7ff","#4f46e5"],["#fce7f3","#be185d"],["#d1fae5","#065f46"],
+  ["#fef3c7","#92400e"],["#ede9fe","#6d28d9"],["#dbeafe","#1e40af"],
+];
+
+// ---- UTILS -----------------------------------------------------------------
+
+function useW() {
+  var s = useState(window.innerWidth);
+  var w = s[0]; var setW = s[1];
+  useEffect(function() {
+    function h() { setW(window.innerWidth); }
+    window.addEventListener("resize", h);
+    return function() { window.removeEventListener("resize", h); };
+  }, []);
+  return w;
+}
+
+function pBadge(s) {
+  var map = {
+    paid:    { l:"Paye",       bg:"#d1fae5", c:"#065f46", d:"#10b981" },
+    pending: { l:"En attente", bg:"#fef3c7", c:"#92400e", d:"#f59e0b" },
+    overdue: { l:"En retard",  bg:"#fee2e2", c:"#991b1b", d:"#ef4444" },
+  };
+  return map[s] || { l:s, bg:"#f3f4f6", c:"#6b7280", d:"#9ca3af" };
+}
+
+function getDossierStatus(dossiers, eleveId) {
+  var d = dossiers[eleveId] || {};
+  var ok = DOCS.filter(function(doc) { return d[doc.id] === "ok"; }).length;
+  return { ok: ok, total: DOCS.length, complet: ok === DOCS.length };
+}
+
+function Av(props) {
+  var fn = props.fn; var ln = props.ln;
+  var size = props.size || 36; var idx = props.idx || 0;
+  var pair = AVC[idx % AVC.length];
+  return React.createElement("div", {
+    style: { width:size, height:size, borderRadius:"50%", background:pair[0], color:pair[1],
+             display:"flex", alignItems:"center", justifyContent:"center",
+             fontWeight:800, fontSize:size*0.34, flexShrink:0 }
+  }, fn[0] + ln[0]);
+}
+
+function Toast(props) {
+  var t = props.t;
+  if (!t) return null;
+  return React.createElement("div", {
+    style: { position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)", zIndex:999,
+             padding:"12px 22px", borderRadius:24, fontWeight:700, fontSize:13,
+             background: t.err ? "#fee2e2" : "#1a1a1a",
+             color: t.err ? "#991b1b" : "#fff",
+             boxShadow:"0 8px 32px rgba(0,0,0,.25)", whiteSpace:"nowrap" }
+  }, t.msg);
+}
+
+function Modal(props) {
+  var open = props.open; var onClose = props.onClose;
+  var dark = props.dark; var children = props.children;
+  if (!open) return null;
+  var bg = dark ? "#0d0d0d" : "#fff";
+  return React.createElement("div", {
+    onClick: onClose,
+    style: { position:"fixed", inset:0, background:"rgba(0,0,0,.8)", backdropFilter:"blur(6px)",
+             zIndex:200, display:"flex", alignItems:"flex-end", justifyContent:"center" }
+  },
+    React.createElement("div", {
+      onClick: function(e) { e.stopPropagation(); },
+      className: "su",
+      style: { background:bg, borderRadius:"22px 22px 0 0", width:"100%", maxWidth:560,
+               maxHeight:"92vh", overflowY:"auto", boxShadow:"0 -8px 40px rgba(0,0,0,.3)" }
+    }, children)
+  );
+}
+
+function TabBar(props) {
+  var tabs = props.tabs; var active = props.active; var setActive = props.setActive;
+  return React.createElement("div", {
+    style: { position:"fixed", bottom:0, left:0, right:0, zIndex:90,
+             background:"rgba(8,8,8,.96)", backdropFilter:"blur(20px)",
+             borderTop:"1px solid rgba(255,255,255,.06)", display:"flex" }
+  },
+    tabs.map(function(tab) {
+      var on = active === tab.id;
+      return React.createElement("button", {
+        key: tab.id,
+        onClick: function() { setActive(tab.id); },
+        style: { flex:1, padding:"10px 4px 8px", border:"none", background:"none", cursor:"pointer",
+                 display:"flex", flexDirection:"column", alignItems:"center", gap:4, position:"relative" }
+      },
+        React.createElement("div", {
+          style: { width:22, height:22, borderRadius:6, display:"flex", alignItems:"center", justifyContent:"center",
+                   background: on ? "rgba(255,255,255,.12)" : "transparent" }
+        },
+          React.createElement("div", {
+            style: { width:8, height:8, borderRadius:"50%", background: on ? "#fff" : "rgba(255,255,255,.3)" }
+          })
+        ),
+        React.createElement("span", {
+          style: { fontSize:9, fontWeight: on ? 700 : 500,
+                   color: on ? "#fff" : "rgba(255,255,255,.3)",
+                   letterSpacing:"0.04em", textTransform:"uppercase" }
+        }, tab.label),
+        tab.badge > 0 && React.createElement("div", {
+          style: { position:"absolute", top:6, right:"calc(50% - 14px)", background:"#ef4444",
+                   color:"#fff", fontSize:9, fontWeight:900, padding:"1px 5px", borderRadius:20 }
+        }, tab.badge),
+        on && React.createElement("div", {
+          style: { position:"absolute", bottom:0, left:"50%", transform:"translateX(-50%)",
+                   width:24, height:2, background:"#fff", borderRadius:"2px 2px 0 0" }
+        })
+      );
+    })
+  );
+}
+
+// ---- ACCUEIL ---------------------------------------------------------------
+
+function AccueilScreen(props) {
+  var annonces = props.annonces; var onNavigate = props.onNavigate;
+  var prochainCours = COURS.find(function(c) { return MES_COURS.indexOf(c.id) >= 0; });
+  var derniere = annonces[0];
+
+  return (
+    <div style={{ flex:1, background:"#080808", overflowY:"auto", paddingBottom:80 }}>
+      <div style={{ padding:"20px 20px 0", display:"flex", alignItems:"flex-start", justifyContent:"space-between" }}>
+        <div>
+          <OptimaLogo size={100} />
+          <p style={{ margin:"4px 0 0", fontSize:14, color:"rgba(255,255,255,.45)" }}>Bonjour Emma</p>
+        </div>
+        <button onClick={function() { onNavigate("messages"); }}
+          style={{ width:42, height:42, borderRadius:"50%", background:"rgba(255,255,255,.06)",
+                   border:"1px solid rgba(255,255,255,.1)", display:"flex", alignItems:"center",
+                   justifyContent:"center", cursor:"pointer", flexShrink:0, marginTop:4, position:"relative" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" strokeWidth="2" strokeLinecap="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          <div style={{ position:"absolute", top:3, right:3, width:10, height:10, borderRadius:"50%",
+                        background:"#ef4444", border:"2px solid #080808" }} />
+        </button>
+      </div>
+
+      {prochainCours && (
+        <div onClick={function() { onNavigate("cours"); }}
+          style={{ margin:"16px 16px 0", background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.09)",
+                   borderRadius:16, padding:"14px 16px", display:"flex", alignItems:"center", gap:14, cursor:"pointer" }}>
+          <div style={{ width:44, height:44, borderRadius:12, background:"rgba(255,255,255,.08)", flexShrink:0 }} />
+          <div style={{ flex:1, minWidth:0 }}>
+            <p style={{ margin:"0 0 2px", fontWeight:600, fontSize:11, color:"rgba(255,255,255,.4)", textTransform:"uppercase", letterSpacing:"0.06em" }}>Prochain cours</p>
+            <p style={{ margin:"0 0 2px", fontWeight:800, fontSize:15, color:"#fff" }}>{prochainCours.nom}</p>
+            <p style={{ margin:0, fontSize:12, color:"rgba(255,255,255,.4)" }}>{prochainCours.jour} - {prochainCours.heure} - {prochainCours.prof}</p>
+          </div>
+          <div style={{ background:"rgba(255,255,255,.06)", borderRadius:8, padding:"5px 12px", flexShrink:0 }}>
+            <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:14, color:"#fff", letterSpacing:"0.06em" }}>Dans 2j</p>
+          </div>
+        </div>
+      )}
+
+      {derniere && (
+        <div onClick={function() { onNavigate("annonces"); }}
+          style={{ margin:"10px 16px 0", background:"rgba(255,255,255,.02)", border:"1px solid rgba(255,255,255,.06)",
+                   borderRadius:14, padding:"11px 14px", display:"flex", alignItems:"center", gap:12, cursor:"pointer" }}>
+          <div style={{ flex:1, minWidth:0 }}>
+            <p style={{ margin:0, fontSize:13, fontWeight:700, color:"rgba(255,255,255,.7)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{derniere.titre}</p>
+            <p style={{ margin:"2px 0 0", fontSize:11, color:"rgba(255,255,255,.3)" }}>{derniere.date}</p>
+          </div>
+        </div>
+      )}
+
+      <div style={{ padding:"18px 16px 0" }}>
+        <p style={{ margin:"0 0 12px", fontSize:10, fontWeight:700, color:"rgba(255,255,255,.22)", textTransform:"uppercase", letterSpacing:"0.14em" }}>Menu principal</p>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+          {TUILES.map(function(t, i) {
+            return (
+              <button key={t.id} onClick={function() { onNavigate(t.id); }} className="fu"
+                style={{ background:t.bg, border:"none", borderRadius:20, padding:"20px 18px 18px",
+                         cursor:"pointer", textAlign:"left", position:"relative", overflow:"hidden",
+                         animationDelay:(i*0.06) + "s", minHeight:120, display:"flex",
+                         flexDirection:"column", justifyContent:"flex-end",
+                         boxShadow:"0 2px 12px rgba(0,0,0,.08)" }}>
+                {t.badge && (
+                  <div style={{ position:"absolute", top:12, right:12, background:t.accent, color:"#fff",
+                                fontSize:9, fontWeight:800, padding:"3px 9px", borderRadius:20 }}>
+                    {t.badge}
+                  </div>
+                )}
+                <p style={{ margin:"0 0 4px", fontFamily:"Bebas Neue,sans-serif", fontSize:30,
+                            letterSpacing:"0.03em", color:t.accent, lineHeight:1 }}>
+                  {t.label}
+                </p>
+                <p style={{ margin:0, fontSize:11, color:t.accent, opacity:.5, lineHeight:1.4, fontWeight:500 }}>
+                  {t.sub}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <p style={{ textAlign:"center", fontSize:10, color:"rgba(255,255,255,.12)", letterSpacing:"0.12em", padding:"20px 0" }}>
+        by Optima
+      </p>
+    </div>
+  );
+}
+
+// ---- ANNONCES --------------------------------------------------------------
+
+function AnnoncesScreen(props) {
+  var annonces = props.annonces; var setAnnonces = props.setAnnonces; var onBack = props.onBack;
+  function toggleLike(id) {
+    setAnnonces(function(prev) {
+      return prev.map(function(a) {
+        return a.id === id ? { ...a, liked:!a.liked, likes:a.liked ? a.likes-1 : a.likes+1 } : a;
+      });
+    });
+  }
+  return (
+    <div style={{ flex:1, background:"#080808", display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+      <div style={{ background:"#080808", borderBottom:"1px solid rgba(255,255,255,.06)", padding:"14px 20px", display:"flex", alignItems:"center", gap:14, flexShrink:0 }}>
+        <button onClick={onBack} style={{ background:"none", border:"none", color:"rgba(255,255,255,.5)", fontSize:22, cursor:"pointer", padding:0 }}>{"<"}</button>
+        <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:22, letterSpacing:"0.05em", color:"#fff" }}>ACTUALITES</p>
+      </div>
+      <div style={{ flex:1, overflowY:"auto", padding:16, paddingBottom:20 }}>
+        {annonces.map(function(a, i) {
+          return (
+            <div key={a.id} className="fu" style={{ background:"rgba(255,255,255,.03)", border:"1px solid rgba(255,255,255,.06)", borderRadius:16, overflow:"hidden", marginBottom:12, animationDelay:(i*0.05)+"s" }}>
+              {a.type === "important" && (
+                <div style={{ background:"rgba(255,255,255,.06)", padding:"6px 14px", borderBottom:"1px solid rgba(255,255,255,.06)" }}>
+                  <span style={{ fontSize:10, fontWeight:800, color:"rgba(255,255,255,.5)", letterSpacing:"0.12em", textTransform:"uppercase" }}>Epingle</span>
+                </div>
+              )}
+              <div style={{ padding:16 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+                  <div style={{ width:34, height:34, borderRadius:"50%", background:"rgba(255,255,255,.08)", border:"1px solid rgba(255,255,255,.1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:800, color:"#fff", flexShrink:0 }}>{a.avatar}</div>
+                  <div style={{ flex:1 }}>
+                    <p style={{ margin:0, fontSize:13, fontWeight:700, color:"#fff" }}>{a.auteur}</p>
+                    <p style={{ margin:0, fontSize:11, color:"rgba(255,255,255,.3)" }}>{a.date}</p>
+                  </div>
+                </div>
+                <p style={{ margin:"0 0 8px", fontWeight:700, fontSize:15, color:"#fff", lineHeight:1.3 }}>{a.titre}</p>
+                <p style={{ margin:"0 0 14px", fontSize:13, color:"rgba(255,255,255,.55)", lineHeight:1.6 }}>{a.texte}</p>
+                <button onClick={function() { toggleLike(a.id); }} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", padding:0 }}>
+                  <div style={{ width:18, height:18, borderRadius:"50%", background: a.liked ? "#f87171" : "rgba(255,255,255,.1)", flexShrink:0 }} />
+                  <span style={{ fontSize:12, color: a.liked ? "#f87171" : "rgba(255,255,255,.35)", fontWeight:600 }}>{a.likes}</span>
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---- COURS -----------------------------------------------------------------
+
+function CoursScreen(props) {
+  var showToast = props.showToast; var initialTab = props.initialTab; var onBack = props.onBack;
+  var s0 = useState(initialTab || "mes"); var tab = s0[0]; var setTab = s0[1];
+  var s1 = useState(null); var selCours = s1[0]; var setSelCours = s1[1];
+  var s2 = useState([]); var panier = s2[0]; var setPanier = s2[1];
+  var s3 = useState(false); var payModal = s3[0]; var setPayModal = s3[1];
+  var s4 = useState(false); var payDone = s4[0]; var setPayDone = s4[1];
+  var s5 = useState({ num:"", exp:"", cvc:"" }); var card = s5[0]; var setCard = s5[1];
+
+  var mesCours = COURS.filter(function(c) { return MES_COURS.indexOf(c.id) >= 0; });
+  var carteCours = COURS.filter(function(c) { return MES_COURS.indexOf(c.id) < 0; });
+  var total = panier.reduce(function(a, c) { return a + c.prix_carte; }, 0);
+
+  function addPanier(c) {
+    if (!panier.find(function(p) { return p.id === c.id; })) {
+      setPanier(function(prev) { return prev.concat([c]); });
+      showToast(c.nom + " ajoute");
+    }
+  }
+  function removePanier(id) {
+    setPanier(function(prev) { return prev.filter(function(p) { return p.id !== id; }); });
+  }
+  function handlePay() {
+    setTimeout(function() {
+      setPayDone(true);
+      setTimeout(function() { setPayModal(false); setPayDone(false); setPanier([]); showToast("Cours reserves !"); }, 2000);
+    }, 1200);
+  }
+
+  var inp = { width:"100%", padding:"12px 14px", borderRadius:10, border:"1px solid rgba(255,255,255,.12)", background:"rgba(255,255,255,.05)", color:"#fff", fontSize:14, outline:"none", boxSizing:"border-box" };
+
+  return (
+    <div style={{ flex:1, background:"#080808", display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+      <div style={{ background:"#080808", borderBottom:"1px solid rgba(255,255,255,.06)", padding:"14px 20px 0", flexShrink:0 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
+          {onBack && <button onClick={onBack} style={{ background:"none", border:"none", color:"rgba(255,255,255,.5)", fontSize:22, cursor:"pointer", padding:0 }}>{"<"}</button>}
+          <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:26, letterSpacing:"0.06em", color:"#fff" }}>MES COURS</p>
+        </div>
+        <div style={{ display:"flex", background:"rgba(255,255,255,.05)", borderRadius:10, padding:3 }}>
+          {[{id:"mes",l:"Mes cours"},{id:"carte",l:"A la carte"}].map(function(t) {
+            return (
+              <button key={t.id} onClick={function() { setTab(t.id); }}
+                style={{ flex:1, padding:"8px", borderRadius:7, border:"none", cursor:"pointer", fontSize:13, fontWeight:700,
+                         background: tab === t.id ? "#fff" : "transparent",
+                         color: tab === t.id ? "#080808" : "rgba(255,255,255,.4)" }}>
+                {t.l}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ flex:1, overflowY:"auto", padding:"14px 16px", paddingBottom:80 }}>
+        {tab === "mes" && mesCours.map(function(c) {
+          var pct = Math.round(c.inscrits/c.places*100);
+          return (
+            <button key={c.id} onClick={function() { setSelCours(c); }}
+              style={{ width:"100%", background:"rgba(255,255,255,.03)", border:"1px solid rgba(255,255,255,.08)",
+                       borderRadius:16, marginBottom:12, overflow:"hidden", cursor:"pointer", textAlign:"left" }}>
+              <div style={{ height:4, background:c.couleur }} />
+              <div style={{ padding:"14px 16px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
+                  <div>
+                    <p style={{ margin:"0 0 3px", fontFamily:"Bebas Neue,sans-serif", fontSize:20, letterSpacing:"0.06em", color:"#fff" }}>{c.nom}</p>
+                    <p style={{ margin:0, fontSize:12, color:"rgba(255,255,255,.4)" }}>Prof. {c.prof}</p>
+                  </div>
+                  <div style={{ textAlign:"right" }}>
+                    <p style={{ margin:"0 0 2px", fontFamily:"Bebas Neue,sans-serif", fontSize:18, color:"#fff" }}>{c.heure}</p>
+                    <p style={{ margin:0, fontSize:11, color:"rgba(255,255,255,.35)" }}>{c.jour}</p>
+                  </div>
+                </div>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <span style={{ fontSize:11, padding:"3px 10px", border:"1px solid rgba(255,255,255,.1)", borderRadius:20, color:"rgba(255,255,255,.4)" }}>{c.niveau}</span>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <div style={{ width:48, height:3, borderRadius:2, background:"rgba(255,255,255,.1)" }}>
+                      <div style={{ height:3, borderRadius:2, background:c.couleur, width: pct + "%" }} />
+                    </div>
+                    <span style={{ fontSize:11, color:"rgba(255,255,255,.35)" }}>{c.inscrits}/{c.places}</span>
+                  </div>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+
+        {tab === "carte" && (
+          <div>
+            {panier.length > 0 && (
+              <div style={{ background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.12)", borderRadius:14, padding:"14px 16px", marginBottom:16 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                  <p style={{ margin:0, fontSize:13, fontWeight:700, color:"#fff" }}>Panier ({panier.length})</p>
+                  <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:20, color:"#fff" }}>{total} EUR</p>
+                </div>
+                {panier.map(function(c) {
+                  return (
+                    <div key={c.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
+                      <span style={{ fontSize:12, color:"rgba(255,255,255,.6)" }}>{c.nom} - {c.jour}</span>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <span style={{ fontSize:12, fontWeight:700, color:"#fff" }}>{c.prix_carte} EUR</span>
+                        <button onClick={function() { removePanier(c.id); }} style={{ background:"none", border:"none", color:"rgba(255,255,255,.3)", cursor:"pointer", fontSize:14 }}>x</button>
+                      </div>
+                    </div>
+                  );
+                })}
+                <button onClick={function() { setPayModal(true); }} style={{ width:"100%", marginTop:10, padding:"12px", borderRadius:10, border:"none", background:"#fff", color:"#080808", fontSize:14, fontWeight:800, cursor:"pointer" }}>Payer {total} EUR</button>
+              </div>
+            )}
+            {carteCours.map(function(c) {
+              var dispo = c.places - c.inscrits;
+              var inP = !!panier.find(function(p) { return p.id === c.id; });
+              return (
+                <div key={c.id} style={{ background:"rgba(255,255,255,.03)", border:"1px solid " + (inP ? "rgba(255,255,255,.2)" : "rgba(255,255,255,.06)"), borderRadius:16, marginBottom:10, padding:"14px 16px", display:"flex", alignItems:"center", gap:14 }}>
+                  <div style={{ width:4, alignSelf:"stretch", borderRadius:4, background:c.couleur, flexShrink:0 }} />
+                  <div style={{ flex:1 }}>
+                    <p style={{ margin:"0 0 3px", fontFamily:"Bebas Neue,sans-serif", fontSize:18, letterSpacing:"0.06em", color:"#fff" }}>{c.nom}</p>
+                    <p style={{ margin:"0 0 6px", fontSize:11, color:"rgba(255,255,255,.4)" }}>{c.jour} - {c.heure} - Prof. {c.prof}</p>
+                    <span style={{ fontSize:11, color: dispo <= 3 ? "#f87171" : "rgba(255,255,255,.4)" }}>{dispo <= 3 ? "Dernieres places : " + dispo : dispo + " dispo"}</span>
+                  </div>
+                  <div style={{ textAlign:"right", flexShrink:0 }}>
+                    <p style={{ margin:"0 0 8px", fontFamily:"Bebas Neue,sans-serif", fontSize:22, color:"#fff" }}>{c.prix_carte} EUR</p>
+                    <button onClick={function() { addPanier(c); }} disabled={inP}
+                      style={{ padding:"7px 14px", borderRadius:8, border:"none", background: inP ? "rgba(255,255,255,.1)" : "#fff", color: inP ? "rgba(255,255,255,.4)" : "#080808", fontSize:12, fontWeight:800, cursor: inP ? "not-allowed" : "pointer" }}>
+                      {inP ? "Ajoute" : "+ Ajouter"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <Modal open={!!selCours} onClose={function() { setSelCours(null); }} dark={true}>
+        {selCours && (
+          <div>
+            <div style={{ height:5, background:selCours.couleur }} />
+            <div style={{ padding:20 }}>
+              <p style={{ margin:"0 0 4px", fontFamily:"Bebas Neue,sans-serif", fontSize:28, letterSpacing:"0.06em", color:"#fff" }}>{selCours.nom}</p>
+              <p style={{ margin:"0 0 16px", fontSize:14, color:"rgba(255,255,255,.4)", fontStyle:"italic" }}>Prof. {selCours.prof}</p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
+                {[{l:"Jour",v:selCours.jour},{l:"Heure",v:selCours.heure},{l:"Salle",v:"Salle "+selCours.salle},{l:"Niveau",v:selCours.niveau}].map(function(x) {
+                  return (
+                    <div key={x.l} style={{ background:"rgba(255,255,255,.04)", borderRadius:10, padding:"12px 14px" }}>
+                      <p style={{ margin:"0 0 4px", fontSize:10, color:"rgba(255,255,255,.3)", textTransform:"uppercase", letterSpacing:"0.08em" }}>{x.l}</p>
+                      <p style={{ margin:0, fontSize:15, color:"#fff", fontWeight:700 }}>{x.v}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ padding:"12px 14px", background:"rgba(255,255,255,.04)", borderRadius:12, display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+                <div style={{ width:20, height:20, borderRadius:"50%", background:"#34d399", flexShrink:0 }} />
+                <p style={{ margin:0, fontSize:13, color:"rgba(255,255,255,.6)", fontWeight:600 }}>Vous etes inscrit(e) a ce cours</p>
+              </div>
+              <button onClick={function() { setSelCours(null); }} style={{ width:"100%", padding:"14px", borderRadius:12, border:"1px solid rgba(255,255,255,.12)", background:"transparent", color:"rgba(255,255,255,.5)", fontSize:14, fontWeight:600, cursor:"pointer" }}>Fermer</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={payModal} onClose={function() { if (!payDone) setPayModal(false); }} dark={true}>
+        <div style={{ padding:20 }}>
+          {payDone ? (
+            <div style={{ textAlign:"center", padding:"32px 0" }}>
+              <div style={{ width:64, height:64, borderRadius:"50%", background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.15)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>
+                <div style={{ width:24, height:24, borderRadius:"50%", background:"#34d399" }} />
+              </div>
+              <p style={{ fontFamily:"Bebas Neue,sans-serif", fontSize:24, color:"#fff", margin:"0 0 8px", letterSpacing:"0.06em" }}>PAIEMENT CONFIRME</p>
+              <p style={{ fontSize:13, color:"rgba(255,255,255,.4)" }}>Vos cours ont ete reserves !</p>
+            </div>
+          ) : (
+            <div>
+              <p style={{ fontFamily:"Bebas Neue,sans-serif", fontSize:22, color:"#fff", margin:"0 0 4px", letterSpacing:"0.06em" }}>PAIEMENT</p>
+              <p style={{ fontSize:13, color:"rgba(255,255,255,.35)", margin:"0 0 20px" }}>{panier.length} cours - Total : {total} EUR</p>
+              {[{l:"Numero de carte",k:"num",p:"1234 5678 9012 3456"},{l:"Expiration",k:"exp",p:"MM/AA"},{l:"CVC",k:"cvc",p:"123"}].map(function(f) {
+                return (
+                  <div key={f.k} style={{ marginBottom:12 }}>
+                    <label style={{ display:"block", fontSize:10, fontWeight:700, color:"rgba(255,255,255,.3)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6 }}>{f.l}</label>
+                    <input value={card[f.k]} onChange={function(e) { var v = e.target.value; setCard(function(p) { var n = {...p}; n[f.k] = v; return n; }); }} placeholder={f.p} style={inp} />
+                  </div>
+                );
+              })}
+              <button onClick={handlePay} style={{ width:"100%", marginTop:8, padding:"14px", borderRadius:12, border:"none", background:"#fff", color:"#080808", fontSize:15, fontWeight:800, cursor:"pointer" }}>Payer {total} EUR</button>
+            </div>
+          )}
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// ---- STAGES ----------------------------------------------------------------
+
+function StagesScreen(props) {
+  var stages = props.stages; var setStages = props.setStages;
+  var workshops = props.workshops; var setWorkshops = props.setWorkshops;
+  var showToast = props.showToast;
+  var s0 = useState("stages"); var tab = s0[0]; var setTab = s0[1];
+  var s1 = useState(null); var selEv = s1[0]; var setSelEv = s1[1];
+  var s2 = useState(false); var payModal = s2[0]; var setPayModal = s2[1];
+  var s3 = useState(false); var payDone = s3[0]; var setPayDone = s3[1];
+  var s4 = useState([]); var myInscriptions = s4[0]; var setMyInscriptions = s4[1];
+  var s5 = useState({ num:"", exp:"", cvc:"", name:"" }); var card = s5[0]; var setCard = s5[1];
+
+  var list = tab === "stages" ? stages : workshops;
+
+  function handleSuccess() {
+    if (!selEv) return;
+    var id = selEv.id;
+    if (selEv.type === "stage") {
+      setStages(function(p) { return p.map(function(s) { return s.id === id ? {...s, inscrits:s.inscrits+1, inscriptions:s.inscriptions.concat(["Emma Dupont"])} : s; }); });
+    } else {
+      setWorkshops(function(p) { return p.map(function(w) { return w.id === id ? {...w, inscrits:w.inscrits+1, inscriptions:w.inscriptions.concat(["Emma Dupont"])} : w; }); });
+    }
+    setMyInscriptions(function(p) { return p.concat([id]); });
+    setPayDone(true);
+    setTimeout(function() { setPayModal(false); setPayDone(false); setSelEv(null); showToast("Inscription confirmee !"); }, 2000);
+  }
+
+  var inp = { width:"100%", padding:"12px 14px", borderRadius:10, border:"1px solid rgba(255,255,255,.12)", background:"rgba(255,255,255,.05)", color:"#fff", fontSize:14, outline:"none", boxSizing:"border-box" };
+
+  return (
+    <div style={{ flex:1, background:"#080808", display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+      <div style={{ background:"#080808", borderBottom:"1px solid rgba(255,255,255,.06)", padding:"14px 20px 0", flexShrink:0 }}>
+        <p style={{ margin:"0 0 12px", fontFamily:"Bebas Neue,sans-serif", fontSize:24, letterSpacing:"0.06em", color:"#fff" }}>STAGES ET WORKSHOPS</p>
+        <div style={{ display:"flex", background:"rgba(255,255,255,.05)", borderRadius:10, padding:3 }}>
+          {[{id:"stages",l:"Stages vacances"},{id:"workshops",l:"Workshops"}].map(function(t) {
+            return (
+              <button key={t.id} onClick={function() { setTab(t.id); }}
+                style={{ flex:1, padding:"8px", borderRadius:7, border:"none", cursor:"pointer", fontSize:13, fontWeight:700, background: tab === t.id ? "#fff" : "transparent", color: tab === t.id ? "#080808" : "rgba(255,255,255,.4)" }}>
+                {t.l}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div style={{ flex:1, overflowY:"auto", padding:"14px 16px", paddingBottom:80 }}>
+        {list.map(function(ev) {
+          var dispo = ev.places - ev.inscrits;
+          var pct = Math.round(ev.inscrits/ev.places*100);
+          var inscrit = myInscriptions.indexOf(ev.id) >= 0;
+          return (
+            <button key={ev.id} onClick={function() { setSelEv(ev); }}
+              style={{ width:"100%", background:"rgba(255,255,255,.03)", border:"1px solid rgba(255,255,255,.08)", borderRadius:16, marginBottom:12, overflow:"hidden", cursor:"pointer", textAlign:"left" }}>
+              <div style={{ height:4, background:ev.couleur }} />
+              <div style={{ padding:16 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
+                  <div>
+                    <p style={{ margin:"0 0 3px", fontFamily:"Bebas Neue,sans-serif", fontSize:20, letterSpacing:"0.06em", color:"#fff" }}>{ev.nom}</p>
+                    <p style={{ margin:0, fontSize:12, color:"rgba(255,255,255,.4)" }}>{ev.type === "stage" ? ev.vacances : ev.date} - {ev.horaires} - {ev.prof}</p>
+                  </div>
+                  <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:24, color:"#fff" }}>{ev.prix} EUR</p>
+                </div>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <div style={{ display:"flex", gap:8 }}>
+                    <span style={{ fontSize:10, padding:"2px 8px", border:"1px solid rgba(255,255,255,.08)", borderRadius:20, color:"rgba(255,255,255,.4)" }}>{ev.age}</span>
+                    {inscrit && <span style={{ fontSize:10, padding:"2px 8px", border:"1px solid rgba(255,255,255,.15)", borderRadius:20, color:"rgba(255,255,255,.6)" }}>Inscrit(e)</span>}
+                  </div>
+                  <span style={{ fontSize:12, color: dispo <= 0 ? "#f87171" : dispo <= 3 ? "#fbbf24" : "rgba(255,255,255,.4)" }}>{dispo <= 0 ? "Complet" : dispo + " places"}</span>
+                </div>
+                <div style={{ marginTop:10, height:4, borderRadius:2, background:"rgba(255,255,255,.08)" }}>
+                  <div style={{ height:4, borderRadius:2, background: pct >= 100 ? "#ef4444" : pct > 70 ? "#f59e0b" : ev.couleur, width: pct + "%" }} />
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <Modal open={!!selEv && !payModal} onClose={function() { setSelEv(null); }} dark={true}>
+        {selEv && (
+          <div>
+            <div style={{ height:5, background:selEv.couleur }} />
+            <div style={{ padding:20 }}>
+              <p style={{ margin:"0 0 4px", fontFamily:"Bebas Neue,sans-serif", fontSize:24, letterSpacing:"0.04em", color:"#fff" }}>{selEv.nom}</p>
+              <p style={{ margin:"0 0 16px", fontSize:13, color:"rgba(255,255,255,.4)" }}>{selEv.prof} - Salle {selEv.salle}</p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
+                {(selEv.type === "stage"
+                  ? [{l:"Debut",v:selEv.debut},{l:"Fin",v:selEv.fin},{l:"Horaires",v:selEv.horaires},{l:"Vacances",v:selEv.vacances}]
+                  : [{l:"Date",v:selEv.date},{l:"Horaires",v:selEv.horaires}]
+                ).map(function(x) {
+                  return (
+                    <div key={x.l} style={{ background:"rgba(255,255,255,.04)", borderRadius:10, padding:"10px 13px" }}>
+                      <p style={{ margin:"0 0 3px", fontSize:10, color:"rgba(255,255,255,.3)", textTransform:"uppercase", letterSpacing:"0.06em" }}>{x.l}</p>
+                      <p style={{ margin:0, fontSize:13, color:"#fff", fontWeight:600 }}>{x.v}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ background:"rgba(255,255,255,.03)", border:"1px solid rgba(255,255,255,.06)", borderRadius:12, padding:"14px 16px", marginBottom:16 }}>
+                <p style={{ margin:0, fontSize:13, color:"rgba(255,255,255,.6)", lineHeight:1.6 }}>{selEv.desc}</p>
+              </div>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+                <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:36, color:"#fff", letterSpacing:"0.04em" }}>{selEv.prix} EUR</p>
+                {myInscriptions.indexOf(selEv.id) >= 0 ? (
+                  <div style={{ padding:"12px 20px", borderRadius:12, background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.12)" }}>
+                    <p style={{ margin:0, fontSize:13, fontWeight:700, color:"rgba(255,255,255,.6)" }}>Inscrit(e)</p>
+                  </div>
+                ) : (selEv.places - selEv.inscrits) <= 0 ? (
+                  <div style={{ padding:"12px 20px", borderRadius:12, background:"rgba(239,68,68,.1)", border:"1px solid rgba(239,68,68,.2)" }}>
+                    <p style={{ margin:0, fontSize:13, fontWeight:700, color:"#f87171" }}>Complet</p>
+                  </div>
+                ) : (
+                  <button onClick={function() { setPayModal(true); }} style={{ padding:"13px 24px", borderRadius:12, border:"none", background:"#fff", color:"#080808", fontSize:14, fontWeight:800, cursor:"pointer" }}>Reserver</button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={payModal} onClose={function() { if (!payDone) setPayModal(false); }} dark={true}>
+        <div style={{ padding:20 }}>
+          {payDone ? (
+            <div style={{ textAlign:"center", padding:"32px 0" }}>
+              <p style={{ fontFamily:"Bebas Neue,sans-serif", fontSize:24, color:"#fff", margin:"0 0 8px", letterSpacing:"0.06em" }}>INSCRIPTION CONFIRMEE</p>
+              <p style={{ fontSize:13, color:"rgba(255,255,255,.4)" }}>{selEv && selEv.nom}</p>
+            </div>
+          ) : selEv && (
+            <div>
+              <p style={{ fontFamily:"Bebas Neue,sans-serif", fontSize:22, color:"#fff", margin:"0 0 4px", letterSpacing:"0.06em" }}>PAIEMENT</p>
+              <div style={{ background:"rgba(255,255,255,.04)", borderRadius:10, padding:"12px 14px", marginBottom:20 }}>
+                <p style={{ margin:"0 0 2px", fontSize:13, fontWeight:700, color:"#fff" }}>{selEv.nom}</p>
+                <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:22, color:"#fff" }}>{selEv.prix} EUR</p>
+              </div>
+              {[{l:"Nom",k:"name",p:"NOM PRENOM"},{l:"Numero",k:"num",p:"1234 5678 9012 3456"},{l:"Expiration",k:"exp",p:"MM/AA"},{l:"CVC",k:"cvc",p:"123"}].map(function(f) {
+                return (
+                  <div key={f.k} style={{ marginBottom:12 }}>
+                    <label style={{ display:"block", fontSize:10, fontWeight:700, color:"rgba(255,255,255,.3)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6 }}>{f.l}</label>
+                    <input value={card[f.k]} onChange={function(e) { var v = e.target.value; setCard(function(p) { var n = {...p}; n[f.k] = v; return n; }); }} placeholder={f.p} style={inp} />
+                  </div>
+                );
+              })}
+              <button onClick={handleSuccess} style={{ width:"100%", padding:"14px", borderRadius:12, border:"none", background:"#fff", color:"#080808", fontSize:15, fontWeight:800, cursor:"pointer" }}>Confirmer - {selEv.prix} EUR</button>
+            </div>
+          )}
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// ---- GALA ------------------------------------------------------------------
+
+function GalaScreen(props) {
+  var showToast = props.showToast;
+  var s0 = useState("billets"); var activeTab = s0[0]; var setActiveTab = s0[1];
+  var s1 = useState(null); var selTarif = s1[0]; var setSelTarif = s1[1];
+  var s2 = useState(1); var nbPlaces = s2[0]; var setNbPlaces = s2[1];
+  var s3 = useState(false); var payModal = s3[0]; var setPayModal = s3[1];
+  var s4 = useState(false); var payDone = s4[0]; var setPayDone = s4[1];
+  var s5 = useState({}); var commandes = s5[0]; var setCommandes = s5[1];
+  var s6 = useState(false); var costumeModal = s6[0]; var setCostumeModal = s6[1];
+  var s7 = useState(false); var costumeDone = s7[0]; var setCostumeDone = s7[1];
+  var s8 = useState({ num:"", exp:"", cvc:"", name:"" }); var card = s8[0]; var setCard = s8[1];
+
+  var placesRestantes = GALA.placesTotal - GALA.placesVendues;
+  var pct = Math.round(GALA.placesVendues / GALA.placesTotal * 100);
+  var totalBillet = selTarif ? selTarif.prix * nbPlaces : 0;
+  var mesCostumeIds = MES_COURS.filter(function(id) { return COSTUMES[id]; });
+  var totalCostumes = mesCostumeIds.reduce(function(a, id) { return a + (COSTUMES[id] ? COSTUMES[id].prix : 0); }, 0);
+  var toutSel = mesCostumeIds.every(function(id) { return commandes[id]; });
+
+  function handlePayBillet() {
+    setTimeout(function() {
+      setPayDone(true);
+      setTimeout(function() { setPayModal(false); setPayDone(false); setSelTarif(null); setNbPlaces(1); showToast(nbPlaces + " billet(s) reserves !"); }, 2000);
+    }, 1200);
+  }
+
+  function handlePayCostume() {
+    setTimeout(function() {
+      setCostumeDone(true);
+      setTimeout(function() { setCostumeModal(false); setCostumeDone(false); showToast("Commande costume confirmee !"); }, 2000);
+    }, 1200);
+  }
+
+  var inp = { width:"100%", padding:"12px 14px", borderRadius:10, border:"1px solid rgba(255,255,255,.12)", background:"rgba(255,255,255,.05)", color:"#fff", fontSize:14, outline:"none", boxSizing:"border-box" };
+
+  return (
+    <div style={{ flex:1, background:"#080808", display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+      <div style={{ background:"#080808", borderBottom:"1px solid rgba(255,255,255,.06)", padding:"14px 20px 0", flexShrink:0 }}>
+        <p style={{ margin:"0 0 12px", fontFamily:"Bebas Neue,sans-serif", fontSize:26, letterSpacing:"0.06em", color:"#fff" }}>GALA 2025</p>
+        <div style={{ display:"flex", background:"rgba(255,255,255,.05)", borderRadius:10, padding:3 }}>
+          {[{id:"billets",l:"Billets"},{id:"costumes",l:"Costumes"}].map(function(t) {
+            return (
+              <button key={t.id} onClick={function() { setActiveTab(t.id); }}
+                style={{ flex:1, padding:"8px", borderRadius:7, border:"none", cursor:"pointer", fontSize:13, fontWeight:700, background: activeTab === t.id ? "#fff" : "transparent", color: activeTab === t.id ? "#080808" : "rgba(255,255,255,.4)" }}>
+                {t.l}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ flex:1, overflowY:"auto", padding:"14px 16px", paddingBottom:80 }}>
+
+        {activeTab === "billets" && (
+          <div>
+            <div style={{ background:"rgba(255,255,255,.03)", border:"1px solid rgba(255,255,255,.1)", borderRadius:20, overflow:"hidden", marginBottom:16 }}>
+              <div style={{ padding:"24px 20px 18px", textAlign:"center", borderBottom:"1px solid rgba(255,255,255,.06)" }}>
+                <p style={{ margin:"0 0 6px", fontFamily:"Bebas Neue,sans-serif", fontSize:24, letterSpacing:"0.08em", color:"#fff" }}>{GALA.titre}</p>
+                <p style={{ margin:"0 0 4px", fontSize:16, color:"rgba(255,255,255,.55)", fontStyle:"italic" }}>{GALA.date}</p>
+                <p style={{ margin:0, fontSize:13, color:"rgba(255,255,255,.35)" }}>{GALA.heure} - {GALA.lieu}</p>
+              </div>
+              <div style={{ padding:"14px 20px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                  <span style={{ fontSize:12, color:"rgba(255,255,255,.4)" }}>Places disponibles</span>
+                  <span style={{ fontSize:14, fontWeight:800, color: placesRestantes < 50 ? "#f87171" : "#fff" }}>{placesRestantes} / {GALA.placesTotal}</span>
+                </div>
+                <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,.08)" }}>
+                  <div style={{ height:6, borderRadius:3, background: pct > 85 ? "#f87171" : "#fff", width: pct + "%" }} />
+                </div>
+                {placesRestantes < 80 && <p style={{ margin:"8px 0 0", fontSize:12, color:"#f87171", fontWeight:600 }}>Plus que {placesRestantes} places !</p>}
+              </div>
+            </div>
+
+            <div style={{ background:"rgba(255,255,255,.02)", border:"1px solid rgba(255,255,255,.06)", borderRadius:14, padding:"14px 16px", marginBottom:16 }}>
+              <p style={{ margin:"0 0 10px", fontSize:11, fontWeight:700, color:"rgba(255,255,255,.3)", textTransform:"uppercase", letterSpacing:"0.1em" }}>Programme</p>
+              {GALA.programme.map(function(p, i) {
+                return (
+                  <div key={i} style={{ display:"flex", gap:14, marginBottom: i < GALA.programme.length - 1 ? 10 : 0 }}>
+                    <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:14, color:"rgba(255,255,255,.3)", letterSpacing:"0.06em", width:40, flexShrink:0 }}>{p.heure}</p>
+                    <div style={{ display:"flex", gap:10, flex:1 }}>
+                      <div style={{ width:1, background:"rgba(255,255,255,.08)", flexShrink:0 }} />
+                      <p style={{ margin:0, fontSize:13, color:"rgba(255,255,255,.5)" }}>{p.titre}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <p style={{ margin:"0 0 10px", fontSize:11, fontWeight:700, color:"rgba(255,255,255,.3)", textTransform:"uppercase", letterSpacing:"0.1em" }}>Choisir mes billets</p>
+            {GALA.tarifs.map(function(t) {
+              var isSelected = selTarif && selTarif.id === t.id;
+              return (
+                <button key={t.id} onClick={function() { setSelTarif(t); }}
+                  style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 16px", borderRadius:14, border:"1.5px solid " + (isSelected ? "rgba(255,255,255,.4)" : "rgba(255,255,255,.08)"), background: isSelected ? "rgba(255,255,255,.06)" : "transparent", cursor:"pointer", marginBottom:8 }}>
+                  <div style={{ textAlign:"left" }}>
+                    <p style={{ margin:"0 0 2px", fontWeight:700, fontSize:14, color:"#fff" }}>{t.nom}</p>
+                    <p style={{ margin:0, fontSize:12, color:"rgba(255,255,255,.35)" }}>{t.desc}</p>
+                  </div>
+                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                    <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:24, color:"#fff" }}>{t.prix} EUR</p>
+                    <div style={{ width:20, height:20, borderRadius:"50%", border:"2px solid " + (isSelected ? "#fff" : "rgba(255,255,255,.2)"), background: isSelected ? "#fff" : "transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                      {isSelected && <div style={{ width:8, height:8, borderRadius:"50%", background:"#080808" }} />}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+
+            {selTarif && (
+              <div style={{ marginTop:8, background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.1)", borderRadius:14, padding:"14px 16px" }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+                  <p style={{ margin:0, fontSize:13, color:"rgba(255,255,255,.6)" }}>Nombre de places</p>
+                  <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+                    <button onClick={function() { setNbPlaces(Math.max(1, nbPlaces - 1)); }} style={{ width:32, height:32, borderRadius:"50%", border:"1px solid rgba(255,255,255,.15)", background:"transparent", color:"#fff", fontSize:18, cursor:"pointer" }}>-</button>
+                    <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:24, color:"#fff", width:20, textAlign:"center" }}>{nbPlaces}</p>
+                    <button onClick={function() { setNbPlaces(Math.min(8, nbPlaces + 1)); }} style={{ width:32, height:32, borderRadius:"50%", border:"1px solid rgba(255,255,255,.15)", background:"transparent", color:"#fff", fontSize:18, cursor:"pointer" }}>+</button>
+                  </div>
+                </div>
+                <button onClick={function() { setPayModal(true); }} style={{ width:"100%", padding:"14px", borderRadius:12, border:"none", background:"#fff", color:"#080808", fontSize:15, fontWeight:800, cursor:"pointer" }}>
+                  Reserver {nbPlaces} billet(s) - {totalBillet} EUR
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "costumes" && (
+          <div>
+            <div style={{ background:"rgba(255,255,255,.02)", border:"1px solid rgba(255,255,255,.08)", borderRadius:14, padding:"12px 14px", marginBottom:18 }}>
+              <p style={{ margin:0, fontSize:13, color:"rgba(255,255,255,.5)", lineHeight:1.6 }}>
+                Choisissez votre taille pour chaque cours. Le reglement s'effectue en ligne.
+              </p>
+            </div>
+
+            {mesCostumeIds.map(function(id) {
+              var cours = COURS.find(function(c) { return c.id === id; });
+              var costume = COSTUMES[id];
+              if (!cours || !costume) return null;
+              var tailleSel = commandes[id];
+              return (
+                <div key={id} style={{ background:"rgba(255,255,255,.03)", border:"1.5px solid " + (tailleSel ? "rgba(255,255,255,.2)" : "rgba(255,255,255,.08)"), borderRadius:16, marginBottom:16, overflow:"hidden" }}>
+                  <div style={{ height:4, background:cours.couleur }} />
+                  <div style={{ padding:16 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+                      <div>
+                        <p style={{ margin:"0 0 3px", fontFamily:"Bebas Neue,sans-serif", fontSize:22, letterSpacing:"0.04em", color:"#fff" }}>{cours.nom}</p>
+                        <p style={{ margin:0, fontSize:12, color:"rgba(255,255,255,.4)" }}>{cours.jour} - {cours.heure}</p>
+                      </div>
+                      <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:22, color:"#fff" }}>{costume.prix} EUR</p>
+                    </div>
+                    <p style={{ margin:"0 0 10px", fontSize:11, fontWeight:700, color:"rgba(255,255,255,.4)", textTransform:"uppercase", letterSpacing:"0.08em" }}>Ma taille</p>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                      {TAILLES.map(function(t) {
+                        var sel = tailleSel === t;
+                        return (
+                          <button key={t} onClick={function() { var nc = {...commandes}; nc[id] = t; setCommandes(nc); }}
+                            style={{ padding:"9px 14px", borderRadius:10, border:"1.5px solid " + (sel ? "#fff" : "rgba(255,255,255,.15)"), background: sel ? "#fff" : "transparent", color: sel ? "#080808" : "rgba(255,255,255,.6)", fontSize:13, fontWeight: sel ? 800 : 500, cursor:"pointer", minWidth:52, textAlign:"center" }}>
+                            {t}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {tailleSel && (
+                      <div style={{ marginTop:12, display:"flex", alignItems:"center", gap:8, padding:"8px 12px", background:"rgba(255,255,255,.05)", borderRadius:10 }}>
+                        <div style={{ width:8, height:8, borderRadius:"50%", background:"#34d399", flexShrink:0 }} />
+                        <p style={{ margin:0, fontSize:13, color:"rgba(255,255,255,.7)", fontWeight:600 }}>Taille selectionnee : {tailleSel}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div style={{ background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.1)", borderRadius:14, padding:"14px 16px" }}>
+              <p style={{ margin:"0 0 12px", fontSize:11, fontWeight:700, color:"rgba(255,255,255,.3)", textTransform:"uppercase", letterSpacing:"0.08em" }}>Recapitulatif</p>
+              {mesCostumeIds.map(function(id) {
+                var cours = COURS.find(function(c) { return c.id === id; });
+                var costume = COSTUMES[id];
+                if (!cours || !costume) return null;
+                return (
+                  <div key={id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                    <div>
+                      <p style={{ margin:0, fontSize:13, fontWeight:700, color:"rgba(255,255,255,.8)" }}>{cours.nom}</p>
+                      {commandes[id]
+                        ? <p style={{ margin:0, fontSize:11, color:"rgba(255,255,255,.4)" }}>Taille : {commandes[id]}</p>
+                        : <p style={{ margin:0, fontSize:11, color:"#f87171" }}>Taille non selectionnee</p>
+                      }
+                    </div>
+                    <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:18, color:"#fff" }}>{costume.prix} EUR</p>
+                  </div>
+                );
+              })}
+              <div style={{ borderTop:"1px solid rgba(255,255,255,.08)", paddingTop:12, marginTop:8, display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+                <p style={{ margin:0, fontSize:14, fontWeight:700, color:"rgba(255,255,255,.7)" }}>Total</p>
+                <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:24, color:"#fff" }}>{totalCostumes} EUR</p>
+              </div>
+              <button onClick={function() { if (toutSel) setCostumeModal(true); }} disabled={!toutSel}
+                style={{ width:"100%", padding:"14px", borderRadius:12, border:"none", background: toutSel ? "#fff" : "rgba(255,255,255,.1)", color: toutSel ? "#080808" : "rgba(255,255,255,.3)", fontSize:15, fontWeight:800, cursor: toutSel ? "pointer" : "not-allowed" }}>
+                {toutSel ? "Commander - " + totalCostumes + " EUR" : "Selectionnez toutes les tailles"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <Modal open={payModal} onClose={function() { if (!payDone) setPayModal(false); }} dark={true}>
+        <div style={{ padding:20 }}>
+          {payDone ? (
+            <div style={{ textAlign:"center", padding:"32px 0" }}>
+              <p style={{ fontFamily:"Bebas Neue,sans-serif", fontSize:26, color:"#fff", margin:"0 0 8px", letterSpacing:"0.06em" }}>BILLETS RESERVES !</p>
+              <p style={{ fontSize:13, color:"rgba(255,255,255,.4)" }}>{nbPlaces} place(s) - {GALA.date}</p>
+            </div>
+          ) : selTarif && (
+            <div>
+              <p style={{ fontFamily:"Bebas Neue,sans-serif", fontSize:22, color:"#fff", margin:"0 0 4px", letterSpacing:"0.06em" }}>PAIEMENT BILLET</p>
+              <div style={{ background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.08)", borderRadius:10, padding:"12px 14px", marginBottom:20 }}>
+                <p style={{ margin:"0 0 2px", fontSize:13, fontWeight:700, color:"#fff" }}>{nbPlaces}x {selTarif.nom} - Gala {GALA.date}</p>
+                <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:22, color:"#fff" }}>{totalBillet} EUR</p>
+              </div>
+              {[{l:"Nom",k:"name",p:"NOM PRENOM"},{l:"Numero",k:"num",p:"1234 5678 9012 3456"},{l:"Expiration",k:"exp",p:"MM/AA"},{l:"CVC",k:"cvc",p:"123"}].map(function(f) {
+                return (
+                  <div key={f.k} style={{ marginBottom:12 }}>
+                    <label style={{ display:"block", fontSize:10, fontWeight:700, color:"rgba(255,255,255,.3)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6 }}>{f.l}</label>
+                    <input value={card[f.k]} onChange={function(e) { var v = e.target.value; setCard(function(p) { var n = {...p}; n[f.k] = v; return n; }); }} placeholder={f.p} style={inp} />
+                  </div>
+                );
+              })}
+              <button onClick={handlePayBillet} style={{ width:"100%", padding:"14px", borderRadius:12, border:"none", background:"#fff", color:"#080808", fontSize:15, fontWeight:800, cursor:"pointer" }}>Confirmer - {totalBillet} EUR</button>
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      <Modal open={costumeModal} onClose={function() { if (!costumeDone) setCostumeModal(false); }} dark={true}>
+        <div style={{ padding:20 }}>
+          {costumeDone ? (
+            <div style={{ textAlign:"center", padding:"32px 0" }}>
+              <div style={{ width:64, height:64, borderRadius:"50%", background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.15)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>
+                <div style={{ width:24, height:24, borderRadius:"50%", background:"#34d399" }} />
+              </div>
+              <p style={{ fontFamily:"Bebas Neue,sans-serif", fontSize:24, color:"#fff", margin:"0 0 8px", letterSpacing:"0.06em" }}>COMMANDE CONFIRMEE !</p>
+              <p style={{ fontSize:13, color:"rgba(255,255,255,.4)" }}>Votre costume sera disponible avant le gala</p>
+            </div>
+          ) : (
+            <div>
+              <p style={{ fontFamily:"Bebas Neue,sans-serif", fontSize:22, color:"#fff", margin:"0 0 20px", letterSpacing:"0.06em" }}>COMMANDE COSTUME</p>
+              {[{l:"Nom",k:"name",p:"NOM PRENOM"},{l:"Numero",k:"num",p:"1234 5678 9012 3456"},{l:"Expiration",k:"exp",p:"MM/AA"},{l:"CVC",k:"cvc",p:"123"}].map(function(f) {
+                return (
+                  <div key={f.k} style={{ marginBottom:12 }}>
+                    <label style={{ display:"block", fontSize:10, fontWeight:700, color:"rgba(255,255,255,.3)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6 }}>{f.l}</label>
+                    <input value={card[f.k]} onChange={function(e) { var v = e.target.value; setCard(function(p) { var n = {...p}; n[f.k] = v; return n; }); }} placeholder={f.p} style={inp} />
+                  </div>
+                );
+              })}
+              <button onClick={handlePayCostume} style={{ width:"100%", padding:"14px", borderRadius:12, border:"none", background:"#fff", color:"#080808", fontSize:15, fontWeight:800, cursor:"pointer" }}>Confirmer - {totalCostumes} EUR</button>
+            </div>
+          )}
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// ---- MESSAGES --------------------------------------------------------------
+
+function MessagesScreen() {
+  var s0 = useState(MSGS_INIT); var convs = s0[0]; var setConvs = s0[1];
+  var s1 = useState(null); var activeConv = s1[0]; var setActiveConv = s1[1];
+  var s2 = useState(""); var newMsg = s2[0]; var setNewMsg = s2[1];
+  var bottomRef = useRef(null);
+
+  function sendMsg() {
+    if (!newMsg.trim() || !activeConv) return;
+    var msg = { id:"m" + Date.now(), from:"me", text:newMsg.trim(), time:"maintenant" };
+    setConvs(function(prev) {
+      return prev.map(function(c) {
+        return c.id === activeConv ? { ...c, messages:c.messages.concat([msg]), lastMsg:newMsg.trim(), lastTime:"maintenant", nonLus:0 } : c;
+      });
+    });
+    setNewMsg("");
+    setTimeout(function() { bottomRef.current && bottomRef.current.scrollIntoView({ behavior:"smooth" }); }, 50);
+  }
+
+  var conv = convs.find(function(c) { return c.id === activeConv; });
+
+  if (activeConv && conv) {
+    return (
+      <div style={{ flex:1, background:"#080808", display:"flex", flexDirection:"column", height:"100%" }}>
+        <div style={{ background:"#080808", borderBottom:"1px solid rgba(255,255,255,.06)", padding:"14px 16px", display:"flex", alignItems:"center", gap:12, flexShrink:0 }}>
+          <button onClick={function() { setActiveConv(null); }} style={{ background:"none", border:"none", color:"rgba(255,255,255,.6)", fontSize:20, cursor:"pointer", padding:0 }}>{"<"}</button>
+          <div style={{ width:36, height:36, borderRadius:"50%", background:"rgba(255,255,255,.08)", border:"1px solid rgba(255,255,255,.1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:800, color:"#fff" }}>{conv.avatar}</div>
+          <div>
+            <p style={{ margin:0, fontSize:14, fontWeight:700, color:"#fff" }}>{conv.contact}</p>
+            <p style={{ margin:0, fontSize:11, color:"rgba(255,255,255,.3)" }}>En ligne</p>
+          </div>
+        </div>
+        <div style={{ flex:1, overflowY:"auto", padding:16, paddingBottom:8 }}>
+          {conv.messages.map(function(m) {
+            var isMe = m.from === "me";
+            return (
+              <div key={m.id} style={{ display:"flex", justifyContent: isMe ? "flex-end" : "flex-start", marginBottom:8 }}>
+                <div style={{ maxWidth:"78%", background: isMe ? "#fff" : "rgba(255,255,255,.07)", color: isMe ? "#080808" : "#fff", borderRadius: isMe ? "18px 18px 4px 18px" : "18px 18px 18px 4px", padding:"10px 14px" }}>
+                  <p style={{ margin:"0 0 4px", fontSize:14, lineHeight:1.5 }}>{m.text}</p>
+                  <p style={{ margin:0, fontSize:10, color: isMe ? "rgba(0,0,0,.35)" : "rgba(255,255,255,.3)", textAlign:"right" }}>{m.time}</p>
+                </div>
+              </div>
+            );
+          })}
+          <div ref={bottomRef} />
+        </div>
+        <div style={{ padding:"12px 16px", background:"#080808", borderTop:"1px solid rgba(255,255,255,.06)", display:"flex", gap:10, alignItems:"center", paddingBottom:16 }}>
+          <input value={newMsg} onChange={function(e) { setNewMsg(e.target.value); }} onKeyDown={function(e) { if (e.key === "Enter") sendMsg(); }} placeholder="Ecrire un message..."
+            style={{ flex:1, padding:"11px 16px", borderRadius:24, border:"1px solid rgba(255,255,255,.1)", background:"rgba(255,255,255,.06)", color:"#fff", fontSize:14, outline:"none" }} />
+          <button onClick={sendMsg} disabled={!newMsg.trim()}
+            style={{ width:40, height:40, borderRadius:"50%", border:"none", background: newMsg.trim() ? "#fff" : "rgba(255,255,255,.1)", color: newMsg.trim() ? "#080808" : "rgba(255,255,255,.3)", fontSize:16, cursor: newMsg.trim() ? "pointer" : "not-allowed", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800 }}>
+            ^
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ flex:1, background:"#080808", display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+      <div style={{ background:"#080808", borderBottom:"1px solid rgba(255,255,255,.06)", padding:"16px 20px", flexShrink:0 }}>
+        <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:26, letterSpacing:"0.06em", color:"#fff" }}>MESSAGES</p>
+        <p style={{ margin:0, fontSize:12, color:"rgba(255,255,255,.35)" }}>{convs.reduce(function(a,c) { return a+c.nonLus; }, 0)} non lu(s)</p>
+      </div>
+      <div style={{ flex:1, overflowY:"auto", paddingBottom:80 }}>
+        {convs.map(function(c) {
+          return (
+            <button key={c.id} onClick={function() { setActiveConv(c.id); setConvs(function(prev) { return prev.map(function(cv) { return cv.id === c.id ? {...cv, nonLus:0} : cv; }); }); }}
+              style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 20px", background:"none", border:"none", borderBottom:"1px solid rgba(255,255,255,.04)", cursor:"pointer", textAlign:"left" }}>
+              <div style={{ position:"relative" }}>
+                <div style={{ width:46, height:46, borderRadius:"50%", background:"rgba(255,255,255,.08)", border:"1px solid rgba(255,255,255,.1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, fontWeight:800, color:"#fff" }}>{c.avatar}</div>
+                {c.nonLus > 0 && <div style={{ position:"absolute", top:0, right:0, width:16, height:16, borderRadius:"50%", background:"#ef4444", border:"2px solid #080808", display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:900, color:"#fff" }}>{c.nonLus}</div>}
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                  <p style={{ margin:0, fontSize:14, fontWeight: c.nonLus > 0 ? 800 : 600, color:"#fff" }}>{c.contact}</p>
+                  <p style={{ margin:0, fontSize:11, color:"rgba(255,255,255,.3)" }}>{c.lastTime}</p>
+                </div>
+                <p style={{ margin:0, fontSize:13, color: c.nonLus > 0 ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.35)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", fontWeight: c.nonLus > 0 ? 600 : 400 }}>{c.lastMsg}</p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---- PROFIL ----------------------------------------------------------------
+
+function ProfilScreen(props) {
+  var onLogout = props.onLogout;
+  var sections = [
+    { section:"Mon abonnement", items:[{l:"Plan",v:"2 cours / semaine"},{l:"Paiement",v:"A jour"},{l:"Renouvellement",v:"Septembre 2025"}] },
+    { section:"Mes cours", items: MES_COURS.map(function(id) { var c = COURS.find(function(x) { return x.id === id; }); return { l:c.nom, v:c.jour + " - " + c.heure }; }) },
+    { section:"Mon eleve", items:[{l:"Eleve",v:"Emma Dupont"},{l:"Naissance",v:"15 mars 2012"},{l:"Niveau",v:"Intermediaire"}] },
+  ];
+  return (
+    <div style={{ flex:1, background:"#080808", overflowY:"auto", paddingBottom:80 }}>
+      <div style={{ background:"#080808", borderBottom:"1px solid rgba(255,255,255,.06)", padding:"16px 20px" }}>
+        <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:26, letterSpacing:"0.06em", color:"#fff" }}>MON PROFIL</p>
+      </div>
+      <div style={{ padding:"20px", textAlign:"center", borderBottom:"1px solid rgba(255,255,255,.06)" }}>
+        <div style={{ width:72, height:72, borderRadius:"50%", background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.12)", margin:"0 auto 12px" }} />
+        <p style={{ margin:"0 0 2px", fontFamily:"Bebas Neue,sans-serif", fontSize:24, letterSpacing:"0.06em", color:"#fff" }}>EMMA DUPONT</p>
+        <p style={{ margin:0, fontSize:13, color:"rgba(255,255,255,.4)" }}>parent.dupont@gmail.com</p>
+        <div style={{ display:"inline-flex", alignItems:"center", gap:6, marginTop:10, background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.08)", borderRadius:20, padding:"5px 14px" }}>
+          <div style={{ width:6, height:6, borderRadius:"50%", background:"#34d399" }} />
+          <span style={{ fontSize:12, color:"rgba(255,255,255,.5)" }}>Adherente - Saison 2025/26</span>
+        </div>
+      </div>
+      <div style={{ padding:20 }}>
+        {sections.map(function(sec) {
+          return (
+            <div key={sec.section} style={{ marginBottom:20 }}>
+              <p style={{ margin:"0 0 10px", fontSize:10, fontWeight:700, color:"rgba(255,255,255,.25)", textTransform:"uppercase", letterSpacing:"0.12em" }}>{sec.section}</p>
+              <div style={{ background:"rgba(255,255,255,.03)", border:"1px solid rgba(255,255,255,.06)", borderRadius:14, overflow:"hidden" }}>
+                {sec.items.map(function(item, i) {
+                  return (
+                    <div key={item.l} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"13px 16px", borderBottom: i < sec.items.length - 1 ? "1px solid rgba(255,255,255,.04)" : "none" }}>
+                      <span style={{ fontSize:13, color:"rgba(255,255,255,.4)" }}>{item.l}</span>
+                      <span style={{ fontSize:13, fontWeight:600, color:"#fff" }}>{item.v}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+        <button onClick={onLogout} style={{ width:"100%", padding:"14px", borderRadius:12, border:"1px solid rgba(255,255,255,.1)", background:"transparent", color:"rgba(255,255,255,.4)", fontSize:14, fontWeight:600, cursor:"pointer" }}>Se deconnecter</button>
+      </div>
+    </div>
+  );
+}
+
+// ---- APP ADHERENT ----------------------------------------------------------
+
+function AppAdherent(props) {
+  var onLogout = props.onLogout;
+  var s0 = useState("home"); var tab = s0[0]; var setTab = s0[1];
+  var s1 = useState(ANNONCES); var annonces = s1[0]; var setAnnonces = s1[1];
+  var s2 = useState(STAGES); var stages = s2[0]; var setStages = s2[1];
+  var s3 = useState(WORKSHOPS); var workshops = s3[0]; var setWorkshops = s3[1];
+  var s4 = useState(null); var toast = s4[0]; var setToast = s4[1];
+
+  function showToast(msg, err) { setToast({ msg:msg, err:err }); setTimeout(function() { setToast(null); }, 3000); }
+  function navigate(t) { setTab(t); }
+
+  var TABS = [
+    { id:"home",     label:"Accueil" },
+    { id:"cours",    label:"Cours" },
+    { id:"gala",     label:"Gala" },
+    { id:"messages", label:"Messages", badge: MSGS_INIT.reduce(function(a,c) { return a+c.nonLus; }, 0) },
+    { id:"profil",   label:"Profil" },
+  ];
+
+  var subScreens = ["annonces", "carte", "stages"];
+  var hideTab = subScreens.indexOf(tab) >= 0;
+
+  function renderScreen() {
+    if (tab === "home")     return React.createElement(AccueilScreen, { annonces:annonces, onNavigate:navigate });
+    if (tab === "cours")    return React.createElement(CoursScreen, { showToast:showToast, initialTab:"mes" });
+    if (tab === "carte")    return React.createElement(CoursScreen, { showToast:showToast, initialTab:"carte", onBack:function() { setTab("home"); } });
+    if (tab === "stages")   return React.createElement(StagesScreen, { stages:stages, setStages:setStages, workshops:workshops, setWorkshops:setWorkshops, showToast:showToast });
+    if (tab === "annonces") return React.createElement(AnnoncesScreen, { annonces:annonces, setAnnonces:setAnnonces, onBack:function() { setTab("home"); } });
+    if (tab === "gala")     return React.createElement(GalaScreen, { showToast:showToast });
+    if (tab === "messages") return React.createElement(MessagesScreen, {});
+    if (tab === "profil")   return React.createElement(ProfilScreen, { onLogout:onLogout });
+    return React.createElement(AccueilScreen, { annonces:annonces, onNavigate:navigate });
+  }
+
+  return (
+    <div style={{ background:"#080808", height:"100vh", display:"flex", flexDirection:"column", overflow:"hidden" }}>
+      <Toast t={toast} />
+      <div style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column" }}>
+        {renderScreen()}
+      </div>
+      {!hideTab && React.createElement(TabBar, { tabs:TABS, active:tab, setActive:setTab })}
+    </div>
+  );
+}
+
+// ---- APP ADMIN -------------------------------------------------------------
+
+function AppAdmin(props) {
+  var onLogout = props.onLogout;
+  var s0 = useState("dashboard"); var tab = s0[0]; var setTab = s0[1];
+  var s1 = useState(ELEVES); var eleves = s1[0]; var setEleves = s1[1];
+  var s2 = useState(STAGES); var stages = s2[0]; var setStages = s2[1];
+  var s3 = useState(WORKSHOPS); var workshops = s3[0]; var setWorkshops = s3[1];
+  var s4 = useState(INIT_DOSSIERS); var dossiers = s4[0]; var setDossiers = s4[1];
+  var s5 = useState(null); var toast = s5[0]; var setToast = s5[1];
+  var s6 = useState(null); var selConv = s6[0]; var setSelConv = s6[1];
+  var s7 = useState(""); var newMsg = s7[0]; var setNewMsg = s7[1];
+
+  function showToast(msg, err) { setToast({ msg:msg, err:err }); setTimeout(function() { setToast(null); }, 3000); }
+
+  var pending = eleves.filter(function(e) { return e.statut === "pending"; });
+  var totalMsgs = eleves.reduce(function(a,e) { return a+e.nonLus; }, 0);
+
+  var adminConvs = eleves.filter(function(e) { return e.nonLus > 0; }).map(function(e) {
+    return {
+      id: e.id, eleve: e,
+      messages: [{ id:"am1", from:"user", text:"Bonjour, j'ai une question.", time:"10h15" }]
+    };
+  });
+
+  var ADMIN_TABS = [
+    { id:"dashboard",    label:"Dashboard" },
+    { id:"inscriptions", label:"Inscrip.", badge:pending.length },
+    { id:"evenements",   label:"Events" },
+    { id:"messages",     label:"Messages", badge:totalMsgs },
+    { id:"eleves",       label:"Eleves" },
+  ];
+
+  function Dashboard() {
+    var dossiersIncomplets = eleves.filter(function(e) {
+      var d = dossiers[e.id] || {};
+      return DOCS.some(function(doc) { return d[doc.id] !== "ok"; });
+    });
+
+    return (
+      <div style={{ flex:1, background:"#f3f3f5", overflowY:"auto", paddingBottom:90 }}>
+        <div style={{ background:"#fff", padding:"18px 20px 16px", borderBottom:"1px solid #ebebeb" }}>
+          <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:22, letterSpacing:"0.06em", color:"#1a1a1a" }}>TABLEAU DE BORD</p>
+          <p style={{ margin:"2px 0 0", fontSize:12, color:"#aaa" }}>{new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}</p>
+        </div>
+        <div style={{ padding:16 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
+            {[
+              { label:"Eleves actifs",       value:eleves.filter(function(e){return e.statut==="validated";}).length, border:"#8B1A4A", c:"#8B1A4A" },
+              { label:"En attente",          value:pending.length, border:"#f59e0b", c:"#92400e" },
+              { label:"Dossiers incomplets", value:dossiersIncomplets.length, border:"#ef4444", c:"#991b1b" },
+              { label:"Billets Gala",        value:GALA.placesVendues, border:"#5B2D82", c:"#5B2D82" },
+            ].map(function(k) {
+              return (
+                <div key={k.label} style={{ background:"#fff", borderRadius:14, padding:"16px 16px 14px", borderLeft:"4px solid " + k.border, boxShadow:"0 1px 4px rgba(0,0,0,.04)" }}>
+                  <p style={{ margin:"0 0 6px", fontWeight:900, fontSize:28, color:k.c, lineHeight:1 }}>{k.value}</p>
+                  <p style={{ margin:0, fontSize:12, color:"#888", fontWeight:500 }}>{k.label}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          {dossiersIncomplets.length > 0 && (
+            <div style={{ background:"#fff", borderRadius:14, border:"1.5px solid #fecaca", padding:"14px 16px", marginBottom:14, boxShadow:"0 1px 4px rgba(0,0,0,.04)" }}>
+              <p style={{ margin:"0 0 12px", fontWeight:800, fontSize:14, color:"#1a1a1a" }}>Dossiers incomplets</p>
+              {dossiersIncomplets.map(function(e, i) {
+                var d = dossiers[e.id] || {};
+                var manquants = DOCS.filter(function(doc) { return d[doc.id] !== "ok"; });
+                return (
+                  <div key={e.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0", borderBottom: i < dossiersIncomplets.length-1 ? "1px solid #f5f5f5" : "none" }}>
+                    <Av fn={e.prenom} ln={e.nom} size={34} idx={i} />
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ margin:"0 0 3px", fontSize:13, fontWeight:700, color:"#1a1a1a" }}>{e.prenom} {e.nom}</p>
+                      <p style={{ margin:0, fontSize:11, color:"#ef4444", fontWeight:600 }}>{manquants.length} doc(s) manquant(s)</p>
+                    </div>
+                    <button onClick={function() { showToast("Relance envoyee a " + e.prenom + " !"); }}
+                      style={{ padding:"6px 12px", borderRadius:8, border:"1.5px solid #1a1a1a", background:"#fff", fontSize:11, fontWeight:700, cursor:"pointer", color:"#1a1a1a", whiteSpace:"nowrap" }}>
+                      Relancer
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div style={{ background:"#fff", borderRadius:14, padding:"16px", marginBottom:12, boxShadow:"0 1px 4px rgba(0,0,0,.04)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+              <p style={{ margin:0, fontWeight:800, fontSize:14, color:"#1a1a1a" }}>Gala - Billetterie</p>
+              <span style={{ fontSize:13, fontWeight:800, color:"#5B2D82" }}>{GALA.placesVendues} / {GALA.placesTotal}</span>
+            </div>
+            <div style={{ height:8, borderRadius:4, background:"#f0f0f0" }}>
+              <div style={{ height:8, borderRadius:4, background:"linear-gradient(90deg,#8B1A4A,#5B2D82)", width: Math.round(GALA.placesVendues/GALA.placesTotal*100) + "%" }} />
+            </div>
+            <p style={{ margin:"6px 0 0", fontSize:12, color:"#aaa" }}>{GALA.date} - {GALA.placesTotal-GALA.placesVendues} places restantes</p>
+          </div>
+
+          <div style={{ background:"#fff", borderRadius:14, padding:"16px", boxShadow:"0 1px 4px rgba(0,0,0,.04)" }}>
+            <p style={{ margin:"0 0 14px", fontWeight:800, fontSize:14, color:"#1a1a1a" }}>Remplissage des cours</p>
+            {COURS.map(function(c, i) {
+              var pct = Math.round((c.inscrits/c.places)*100);
+              var col = pct >= 90 ? "#ef4444" : pct >= 65 ? "#f59e0b" : "#10b981";
+              return (
+                <div key={c.id} style={{ marginBottom: i < COURS.length-1 ? 12 : 0 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:5 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <div style={{ width:3, height:16, borderRadius:2, background:c.couleur }} />
+                      <span style={{ fontSize:13, fontWeight:600, color:"#1a1a1a" }}>{c.nom}</span>
+                      <span style={{ fontSize:11, color:"#aaa" }}>{c.jour}</span>
+                    </div>
+                    <span style={{ fontSize:12, fontWeight:800, color:col }}>{c.inscrits}/{c.places}</span>
+                  </div>
+                  <div style={{ height:5, borderRadius:3, background:"#f0f0f0" }}>
+                    <div style={{ height:5, borderRadius:3, background:col, width: pct + "%" }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function Inscriptions() {
+    var s = useState(null); var selEleve = s[0]; var setSelEleve = s[1];
+
+    function handleValidate(id) { setEleves(function(p) { return p.map(function(e) { return e.id === id ? {...e, statut:"validated"} : e; }); }); showToast("Inscription validee !"); }
+    function handleReject(id) { setEleves(function(p) { return p.map(function(e) { return e.id === id ? {...e, statut:"rejected"} : e; }); }); showToast("Refusee.", true); }
+    function toggleDoc(eleveId, docId) {
+      setDossiers(function(prev) {
+        var nd = {...prev};
+        var ne = {...(nd[eleveId] || {})};
+        ne[docId] = ne[docId] === "ok" ? "manquant" : "ok";
+        nd[eleveId] = ne;
+        return nd;
+      });
+    }
+
+    return (
+      <div style={{ flex:1, background:"#f3f3f5", overflowY:"auto", paddingBottom:90 }}>
+        <div style={{ background:"#fff", padding:"18px 20px 16px", borderBottom:"1px solid #ebebeb", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div>
+            <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:22, letterSpacing:"0.06em", color:"#1a1a1a" }}>INSCRIPTIONS</p>
+            <p style={{ margin:"2px 0 0", fontSize:12, color:"#aaa" }}>Dossiers et documents</p>
+          </div>
+          {pending.length > 0 && <div style={{ background:"#fee2e2", color:"#991b1b", fontSize:12, fontWeight:800, padding:"5px 14px", borderRadius:20 }}>{pending.length} en attente</div>}
+        </div>
+        <div style={{ padding:"14px 16px" }}>
+          {pending.length > 0 && (
+            <div style={{ marginBottom:20 }}>
+              <p style={{ margin:"0 0 10px", fontSize:10, fontWeight:800, color:"#aaa", textTransform:"uppercase", letterSpacing:"0.1em" }}>Nouvelles demandes</p>
+              {pending.map(function(e, i) {
+                var coursList = e.cours.map(function(id) { var c = COURS.find(function(x) { return x.id === id; }); return c ? c.nom : null; }).filter(Boolean);
+                return (
+                  <div key={e.id} style={{ background:"#fff", borderRadius:14, padding:"16px", marginBottom:10, borderLeft:"4px solid #f59e0b", boxShadow:"0 1px 4px rgba(0,0,0,.04)" }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:10 }}>
+                      <Av fn={e.prenom} ln={e.nom} size={40} idx={i} />
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <p style={{ margin:"0 0 2px", fontWeight:800, fontSize:15, color:"#1a1a1a" }}>{e.prenom} {e.nom}</p>
+                        <p style={{ margin:0, fontSize:12, color:"#aaa" }}>{e.email}</p>
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginBottom:12 }}>
+                      {coursList.map(function(nom) { return <span key={nom} style={{ padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:600, background:"#f4f4f4", color:"#555" }}>{nom}</span>; })}
+                    </div>
+                    <div style={{ display:"flex", gap:8 }}>
+                      <button onClick={function() { handleReject(e.id); }} style={{ flex:1, padding:"10px", borderRadius:10, border:"1.5px solid #fecaca", background:"#fff", color:"#ef4444", fontSize:12, fontWeight:700, cursor:"pointer" }}>Refuser</button>
+                      <button onClick={function() { handleValidate(e.id); }} style={{ flex:2, padding:"10px", borderRadius:10, border:"none", background:"#1a1a1a", color:"#fff", fontSize:12, fontWeight:800, cursor:"pointer" }}>Valider</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <p style={{ margin:"0 0 10px", fontSize:10, fontWeight:800, color:"#aaa", textTransform:"uppercase", letterSpacing:"0.1em" }}>Suivi des dossiers</p>
+          {eleves.filter(function(e) { return e.statut === "validated"; }).map(function(e, i) {
+            var status = getDossierStatus(dossiers, e.id);
+            var d = dossiers[e.id] || {};
+            var manquants = DOCS.filter(function(doc) { return d[doc.id] !== "ok"; });
+            var isOpen = selEleve === e.id;
+            return (
+              <div key={e.id} style={{ background:"#fff", borderRadius:14, marginBottom:10, overflow:"hidden", borderLeft:"4px solid " + (status.complet ? "#10b981" : "#ef4444"), boxShadow:"0 1px 4px rgba(0,0,0,.04)" }}>
+                <button onClick={function() { setSelEleve(isOpen ? null : e.id); }}
+                  style={{ width:"100%", display:"flex", alignItems:"center", gap:12, padding:"14px 16px", background:"none", border:"none", cursor:"pointer", textAlign:"left" }}>
+                  <Av fn={e.prenom} ln={e.nom} size={38} idx={i} />
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ margin:"0 0 4px", fontSize:14, fontWeight:700, color:"#1a1a1a" }}>{e.prenom} {e.nom}</p>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      {status.complet
+                        ? <span style={{ fontSize:11, fontWeight:700, color:"#059669" }}>Dossier complet</span>
+                        : <span style={{ fontSize:11, fontWeight:700, color:"#ef4444" }}>{status.ok}/{status.total} documents</span>
+                      }
+                      <div style={{ display:"flex", gap:3 }}>
+                        {DOCS.map(function(doc) {
+                          return <div key={doc.id} style={{ width:14, height:5, borderRadius:3, background: d[doc.id] === "ok" ? "#10b981" : "#e5e5e5" }} />;
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    {!status.complet && (
+                      <button onClick={function(ev) { ev.stopPropagation(); showToast("Relance envoyee a " + e.prenom + " !"); }}
+                        style={{ padding:"5px 12px", borderRadius:8, border:"1.5px solid #1a1a1a", background:"#fff", fontSize:11, fontWeight:700, cursor:"pointer", color:"#1a1a1a", whiteSpace:"nowrap" }}>
+                        Relancer
+                      </button>
+                    )}
+                    <span style={{ color:"#ccc", fontSize:16 }}>{isOpen ? "v" : ">"}</span>
+                  </div>
+                </button>
+                {isOpen && (
+                  <div style={{ borderTop:"1px solid #f5f5f5", padding:"12px 16px 14px" }}>
+                    {DOCS.map(function(doc) {
+                      var ok = d[doc.id] === "ok";
+                      return (
+                        <div key={doc.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 12px", borderRadius:10, background: ok ? "#f0fdf4" : "#fff9f9", border:"1px solid " + (ok ? "#bbf7d0" : "#fecaca"), marginBottom:8 }}>
+                          <button onClick={function() { toggleDoc(e.id, doc.id); }}
+                            style={{ width:22, height:22, borderRadius:6, border:"2px solid " + (ok ? "#10b981" : "#d1d5db"), background: ok ? "#10b981" : "#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:12, color:"#fff", fontWeight:900 }}>
+                            {ok ? "v" : ""}
+                          </button>
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <p style={{ margin:"0 0 1px", fontSize:13, fontWeight:700, color:"#1a1a1a" }}>{doc.label}</p>
+                            <p style={{ margin:0, fontSize:11, color:"#888" }}>{doc.short}</p>
+                          </div>
+                          <span style={{ fontSize:11, fontWeight:700, color: ok ? "#059669" : "#ef4444", whiteSpace:"nowrap" }}>{ok ? "Recu" : "Manquant"}</span>
+                        </div>
+                      );
+                    })}
+                    {!status.complet && (
+                      <div style={{ marginTop:12, padding:"10px 14px", background:"#fffbeb", borderRadius:10, border:"1px solid #fde68a" }}>
+                        <p style={{ margin:"0 0 6px", fontSize:12, fontWeight:700, color:"#92400e" }}>Manquants : {manquants.map(function(d) { return d.label; }).join(", ")}</p>
+                        <button onClick={function() { showToast("Relance envoyee a " + e.prenom + " !"); }}
+                          style={{ width:"100%", padding:"9px", borderRadius:9, border:"none", background:"#1a1a1a", color:"#fff", fontSize:12, fontWeight:800, cursor:"pointer" }}>
+                          Envoyer relance push
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  function Evenements() {
+    var s = useState(null); var selEv = s[0]; var setSelEv = s[1];
+    var allEvs = stages.concat(workshops);
+
+    function validerInscription(evId, type, nom) {
+      if (type === "stage") setStages(function(p) { return p.map(function(s) { return s.id === evId ? {...s, inscriptions:s.inscriptions.filter(function(n) { return n !== nom; })} : s; }); });
+      else setWorkshops(function(p) { return p.map(function(w) { return w.id === evId ? {...w, inscriptions:w.inscriptions.filter(function(n) { return n !== nom; })} : w; }); });
+      showToast("Inscription validee !");
+    }
+    function deleteEv(id, type) {
+      if (type === "stage") setStages(function(p) { return p.filter(function(s) { return s.id !== id; }); });
+      else setWorkshops(function(p) { return p.filter(function(w) { return w.id !== id; }); });
+      showToast("Supprime.");
+    }
+
+    return (
+      <div style={{ flex:1, background:"#f3f3f5", overflowY:"auto", paddingBottom:90 }}>
+        <div style={{ background:"#fff", padding:"18px 20px 16px", borderBottom:"1px solid #ebebeb" }}>
+          <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:22, letterSpacing:"0.06em", color:"#1a1a1a" }}>EVENEMENTS</p>
+          <p style={{ margin:"2px 0 0", fontSize:12, color:"#aaa" }}>Stages et workshops</p>
+        </div>
+        <div style={{ padding:"14px 16px" }}>
+          {allEvs.map(function(ev, i) {
+            var pct = Math.round((ev.inscrits/ev.places)*100);
+            var col = pct >= 90 ? "#ef4444" : pct >= 65 ? "#f59e0b" : "#10b981";
+            return (
+              <div key={ev.id} onClick={function() { setSelEv(ev); }} style={{ background:"#fff", borderRadius:14, padding:"16px", marginBottom:10, borderLeft:"4px solid " + ev.couleur, boxShadow:"0 1px 4px rgba(0,0,0,.04)", cursor:"pointer" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
+                  <div>
+                    <span style={{ fontSize:10, fontWeight:700, color:"#aaa", textTransform:"uppercase", letterSpacing:"0.08em" }}>{ev.type === "stage" ? "Stage" : "Workshop"}</span>
+                    <p style={{ margin:"3px 0 4px", fontWeight:800, fontSize:15, color:"#1a1a1a" }}>{ev.nom}</p>
+                    <p style={{ margin:0, fontSize:12, color:"#888" }}>{ev.type === "stage" ? ev.vacances : ev.date} - {ev.horaires} - {ev.prof}</p>
+                  </div>
+                  <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:22, color:"#1a1a1a" }}>{ev.prix} EUR</p>
+                </div>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:10 }}>
+                  <div style={{ flex:1, marginRight:12 }}>
+                    <div style={{ height:5, borderRadius:3, background:"#f0f0f0" }}>
+                      <div style={{ height:5, borderRadius:3, background:col, width: pct + "%" }} />
+                    </div>
+                  </div>
+                  <span style={{ fontSize:12, fontWeight:700, color:col, whiteSpace:"nowrap" }}>{ev.inscrits}/{ev.places}</span>
+                </div>
+                {ev.inscriptions && ev.inscriptions.length > 0 && (
+                  <div style={{ marginTop:8, padding:"6px 10px", background:"#fef3c7", borderRadius:8 }}>
+                    <span style={{ fontSize:11, fontWeight:700, color:"#92400e" }}>{ev.inscriptions.length} demande(s) en attente</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <Modal open={!!selEv} onClose={function() { setSelEv(null); }} dark={false}>
+          {selEv && (
+            <div style={{ padding:20 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
+                <div>
+                  <span style={{ fontSize:10, fontWeight:700, color:"#aaa", textTransform:"uppercase", letterSpacing:"0.08em" }}>{selEv.type === "stage" ? "Stage" : "Workshop"}</span>
+                  <p style={{ margin:"4px 0 4px", fontFamily:"Bebas Neue,sans-serif", fontSize:22, letterSpacing:"0.04em", color:"#1a1a1a" }}>{selEv.nom}</p>
+                  <p style={{ margin:0, fontSize:13, color:"#888" }}>{selEv.prof} - Salle {selEv.salle}</p>
+                </div>
+                <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:26, color:"#1a1a1a" }}>{selEv.prix} EUR</p>
+              </div>
+              {selEv.inscriptions && selEv.inscriptions.length > 0 && (
+                <div style={{ marginBottom:14 }}>
+                  <p style={{ margin:"0 0 10px", fontSize:12, fontWeight:700, color:"#1a1a1a" }}>Demandes en attente ({selEv.inscriptions.length})</p>
+                  {selEv.inscriptions.map(function(nom, i) {
+                    return (
+                      <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom: i < selEv.inscriptions.length-1 ? "1px solid #f5f5f5" : "none" }}>
+                        <div style={{ width:32, height:32, borderRadius:"50%", background:"#f4f4f4", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800, color:"#555", flexShrink:0 }}>{nom.split(" ").map(function(n) { return n[0]; }).join("")}</div>
+                        <p style={{ margin:0, flex:1, fontSize:13, fontWeight:600, color:"#1a1a1a" }}>{nom}</p>
+                        <button onClick={function() { validerInscription(selEv.id, selEv.type, nom); setSelEv(null); }} style={{ padding:"6px 14px", borderRadius:8, border:"none", background:"#1a1a1a", color:"#fff", fontSize:11, fontWeight:700, cursor:"pointer" }}>Valider</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <button onClick={function() { deleteEv(selEv.id, selEv.type); setSelEv(null); }}
+                style={{ width:"100%", padding:"11px", borderRadius:10, border:"1.5px solid #fecaca", background:"#fff", color:"#ef4444", fontSize:13, fontWeight:700, cursor:"pointer" }}>Supprimer</button>
+            </div>
+          )}
+        </Modal>
+      </div>
+    );
+  }
+
+  function AdminMessages() {
+    var ms = useState("list"); var msgMode = ms[0]; var setMsgMode = ms[1];
+    var sc = useState(null); var selCours = sc[0]; var setSelCours = sc[1];
+    var bm = useState(""); var broadcastMsg = bm[0]; var setBroadcastMsg = bm[1];
+    var bd = useState(false); var broadcastDone = bd[0]; var setBroadcastDone = bd[1];
+
+    function elevesOfCours(coursId) { return eleves.filter(function(e) { return e.cours.indexOf(coursId) >= 0; }); }
+
+    function sendBroadcast() {
+      if (!broadcastMsg.trim() || !selCours) return;
+      setBroadcastDone(true);
+      setTimeout(function() {
+        setBroadcastDone(false); setBroadcastMsg(""); setSelCours(null); setMsgMode("list");
+        showToast("Message envoye a " + elevesOfCours(selCours.id).length + " eleves !");
+      }, 2000);
+    }
+
+    if (selConv) {
+      var conv = adminConvs.find(function(c) { return c.id === selConv; });
+      if (!conv) return null;
+      return (
+        <div style={{ flex:1, background:"#f3f3f5", display:"flex", flexDirection:"column", height:"100%" }}>
+          <div style={{ background:"#fff", borderBottom:"1px solid #ebebeb", padding:"14px 16px", display:"flex", alignItems:"center", gap:12, flexShrink:0 }}>
+            <button onClick={function() { setSelConv(null); }} style={{ background:"none", border:"none", color:"#888", fontSize:20, cursor:"pointer" }}>{"<"}</button>
+            <Av fn={conv.eleve.prenom} ln={conv.eleve.nom} size={36} idx={0} />
+            <div>
+              <p style={{ margin:0, fontSize:14, fontWeight:700, color:"#1a1a1a" }}>{conv.eleve.prenom} {conv.eleve.nom}</p>
+              <p style={{ margin:0, fontSize:11, color:"#aaa" }}>{conv.eleve.email}</p>
+            </div>
+          </div>
+          <div style={{ flex:1, overflowY:"auto", padding:16 }}>
+            {conv.messages.map(function(m) {
+              var isAdmin = m.from === "admin";
+              return (
+                <div key={m.id} style={{ display:"flex", justifyContent: isAdmin ? "flex-end" : "flex-start", marginBottom:8 }}>
+                  <div style={{ maxWidth:"78%", background: isAdmin ? "#1a1a1a" : "#fff", color: isAdmin ? "#fff" : "#1a1a1a", borderRadius: isAdmin ? "18px 18px 4px 18px" : "18px 18px 18px 4px", padding:"10px 14px", boxShadow:"0 2px 8px rgba(0,0,0,.06)" }}>
+                    <p style={{ margin:"0 0 4px", fontSize:14, lineHeight:1.5 }}>{m.text}</p>
+                    <p style={{ margin:0, fontSize:10, color: isAdmin ? "rgba(255,255,255,.4)" : "#aaa", textAlign:"right" }}>{m.time}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ padding:"12px 16px", background:"#fff", borderTop:"1px solid #ebebeb", display:"flex", gap:10, paddingBottom:90 }}>
+            <input value={newMsg} onChange={function(e) { setNewMsg(e.target.value); }} placeholder="Repondre..."
+              style={{ flex:1, padding:"10px 14px", borderRadius:24, border:"1.5px solid #e5e7eb", fontSize:13, outline:"none", color:"#1a1a1a" }} />
+            <button onClick={function() { setNewMsg(""); }} style={{ width:38, height:38, borderRadius:"50%", border:"none", background:"#1a1a1a", color:"#fff", fontSize:16, cursor:"pointer", flexShrink:0, fontWeight:800 }}>^</button>
+          </div>
+        </div>
+      );
+    }
+
+    if (msgMode === "par-cours") {
+      if (!selCours) {
+        return (
+          <div style={{ flex:1, background:"#f3f3f5", display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+            <div style={{ background:"#fff", borderBottom:"1px solid #ebebeb", padding:"14px 16px", display:"flex", alignItems:"center", gap:12, flexShrink:0 }}>
+              <button onClick={function() { setMsgMode("list"); }} style={{ background:"none", border:"none", color:"#888", fontSize:20, cursor:"pointer" }}>{"<"}</button>
+              <div>
+                <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:18, letterSpacing:"0.06em", color:"#1a1a1a" }}>PAR COURS</p>
+                <p style={{ margin:0, fontSize:11, color:"#aaa" }}>Choisissez un cours</p>
+              </div>
+            </div>
+            <div style={{ flex:1, overflowY:"auto", paddingBottom:90 }}>
+              <div style={{ background:"#fff" }}>
+                {COURS.map(function(c) {
+                  var nb = elevesOfCours(c.id).length;
+                  return (
+                    <button key={c.id} onClick={function() { setSelCours(c); }}
+                      style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 20px", background:"none", border:"none", borderBottom:"1px solid #f0f0f0", cursor:"pointer", textAlign:"left" }}>
+                      <div style={{ width:44, height:44, borderRadius:12, background:c.bg, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <div style={{ width:18, height:18, borderRadius:"50%", background:c.couleur }} />
+                      </div>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <p style={{ margin:"0 0 3px", fontSize:14, fontWeight:700, color:"#1a1a1a" }}>{c.nom}</p>
+                        <p style={{ margin:0, fontSize:12, color:"#aaa" }}>{c.jour} - {c.heure}</p>
+                      </div>
+                      <div style={{ textAlign:"right", flexShrink:0 }}>
+                        <p style={{ margin:"0 0 2px", fontSize:16, fontWeight:900, color:"#1a1a1a" }}>{nb}</p>
+                        <p style={{ margin:0, fontSize:11, color:"#aaa" }}>eleve(s)</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      var destinataires = elevesOfCours(selCours.id);
+      return (
+        <div style={{ flex:1, background:"#f3f3f5", display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+          <div style={{ background:"#fff", borderBottom:"1px solid #ebebeb", padding:"14px 16px", display:"flex", alignItems:"center", gap:12, flexShrink:0 }}>
+            <button onClick={function() { setSelCours(null); }} style={{ background:"none", border:"none", color:"#888", fontSize:20, cursor:"pointer" }}>{"<"}</button>
+            <div>
+              <p style={{ margin:0, fontSize:15, fontWeight:800, color:"#1a1a1a" }}>{selCours.nom}</p>
+              <p style={{ margin:0, fontSize:11, color:"#aaa" }}>{destinataires.length} destinataire(s)</p>
+            </div>
+          </div>
+          {broadcastDone ? (
+            <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:12, padding:24 }}>
+              <div style={{ width:64, height:64, borderRadius:"50%", background:"#d1fae5", display:"flex", alignItems:"center", justifyContent:"center", fontSize:28 }}>v</div>
+              <p style={{ fontWeight:900, fontSize:18, color:"#1a1a1a", margin:0 }}>Message envoye !</p>
+            </div>
+          ) : (
+            <div style={{ flex:1, overflowY:"auto", padding:"16px", paddingBottom:90 }}>
+              <div style={{ marginBottom:12 }}>
+                <p style={{ margin:"0 0 8px", fontSize:11, fontWeight:700, color:"#aaa", textTransform:"uppercase", letterSpacing:"0.06em" }}>Modeles rapides</p>
+                {["Cours de " + selCours.nom + " annule cette semaine.", "Rappel : cours de " + selCours.nom + " ce " + selCours.jour + " a " + selCours.heure + "."].map(function(tpl, i) {
+                  return (
+                    <button key={i} onClick={function() { setBroadcastMsg(tpl); }}
+                      style={{ width:"100%", padding:"10px 14px", borderRadius:10, border:"1.5px solid " + (broadcastMsg === tpl ? "#1a1a1a" : "#e5e7eb"), background: broadcastMsg === tpl ? "#f4f4f4" : "#fff", textAlign:"left", cursor:"pointer", fontSize:12, color:"#555", marginBottom:6 }}>
+                      {tpl}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ marginBottom:14 }}>
+                <p style={{ margin:"0 0 8px", fontSize:11, fontWeight:700, color:"#aaa", textTransform:"uppercase", letterSpacing:"0.06em" }}>Message</p>
+                <textarea value={broadcastMsg} onChange={function(e) { setBroadcastMsg(e.target.value); }} placeholder={"Message pour les eleves de " + selCours.nom + "..."} rows={4}
+                  style={{ width:"100%", padding:"12px 14px", borderRadius:12, border:"1.5px solid #e5e7eb", fontSize:13, outline:"none", resize:"vertical", color:"#1a1a1a", boxSizing:"border-box" }} />
+              </div>
+              <button onClick={sendBroadcast} disabled={!broadcastMsg.trim() || destinataires.length === 0}
+                style={{ width:"100%", padding:"14px", borderRadius:12, border:"none", background: broadcastMsg.trim() && destinataires.length > 0 ? "#1a1a1a" : "#f3f4f6", color: broadcastMsg.trim() && destinataires.length > 0 ? "#fff" : "#aaa", fontSize:14, fontWeight:800, cursor: broadcastMsg.trim() && destinataires.length > 0 ? "pointer" : "not-allowed" }}>
+                Envoyer a {destinataires.length} eleve(s)
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ flex:1, background:"#f3f3f5", overflowY:"auto", paddingBottom:90 }}>
+        <div style={{ background:"#fff", padding:"18px 20px 14px", borderBottom:"1px solid #ebebeb", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div>
+            <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:22, letterSpacing:"0.06em", color:"#1a1a1a" }}>MESSAGES</p>
+            <p style={{ margin:"2px 0 0", fontSize:12, color:"#aaa" }}>Individuels et par cours</p>
+          </div>
+          {totalMsgs > 0 && <span style={{ background:"#fee2e2", color:"#991b1b", fontSize:12, fontWeight:800, padding:"5px 12px", borderRadius:20 }}>{totalMsgs}</span>}
+        </div>
+        <div style={{ padding:"14px 16px" }}>
+          <button onClick={function() { setMsgMode("par-cours"); setSelCours(null); setBroadcastMsg(""); }}
+            style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:"1.5px solid #e5e7eb", background:"#fff", cursor:"pointer", textAlign:"left", marginBottom:14, boxShadow:"0 1px 4px rgba(0,0,0,.04)" }}>
+            <div style={{ width:42, height:42, borderRadius:11, background:"#EDE8F8", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+              <div style={{ width:16, height:16, borderRadius:4, background:"#5B2D82" }} />
+            </div>
+            <div style={{ flex:1 }}>
+              <p style={{ margin:"0 0 2px", fontWeight:800, fontSize:14, color:"#5B2D82" }}>Message par cours</p>
+              <p style={{ margin:0, fontSize:12, color:"#aaa" }}>Cibler tous les eleves d'un cours</p>
+            </div>
+          </button>
+          <p style={{ margin:"0 0 10px", fontSize:10, fontWeight:800, color:"#aaa", textTransform:"uppercase", letterSpacing:"0.1em" }}>Conversations individuelles</p>
+          <div style={{ background:"#fff", borderRadius:14, overflow:"hidden", boxShadow:"0 1px 4px rgba(0,0,0,.04)" }}>
+            {eleves.map(function(e, i) {
+              return (
+                <button key={e.id} onClick={function() { setSelConv(e.id); }}
+                  style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", background:"none", border:"none", borderBottom: i < eleves.length-1 ? "1px solid #f5f5f5" : "none", cursor:"pointer", textAlign:"left" }}>
+                  <div style={{ position:"relative" }}>
+                    <Av fn={e.prenom} ln={e.nom} size={42} idx={i} />
+                    {e.nonLus > 0 && <div style={{ position:"absolute", top:0, right:0, width:16, height:16, borderRadius:"50%", background:"#ef4444", border:"2px solid #fff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:900, color:"#fff" }}>{e.nonLus}</div>}
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ margin:"0 0 3px", fontSize:14, fontWeight: e.nonLus > 0 ? 800 : 600, color:"#1a1a1a" }}>{e.prenom} {e.nom}</p>
+                    <p style={{ margin:0, fontSize:12, color:"#aaa", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                      {e.cours.map(function(id) { var c = COURS.find(function(x) { return x.id === id; }); return c ? c.nom : null; }).filter(Boolean).join(", ")}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function ElevesAdmin() {
+    var s = useState(null); var sel = s[0]; var setSel = s[1];
+    return (
+      <div style={{ flex:1, background:"#f3f3f5", overflowY:"auto", paddingBottom:90 }}>
+        <div style={{ background:"#fff", padding:"18px 20px 16px", borderBottom:"1px solid #ebebeb" }}>
+          <p style={{ margin:0, fontFamily:"Bebas Neue,sans-serif", fontSize:22, letterSpacing:"0.06em", color:"#1a1a1a" }}>ELEVES ({eleves.length})</p>
+        </div>
+        <div style={{ padding:"14px 16px" }}>
+          <div style={{ background:"#fff", borderRadius:14, overflow:"hidden", boxShadow:"0 1px 4px rgba(0,0,0,.04)" }}>
+            {eleves.map(function(e, i) {
+              var pb = pBadge(e.paiement);
+              return (
+                <button key={e.id} onClick={function() { setSel(e); }}
+                  style={{ width:"100%", display:"flex", alignItems:"center", gap:12, padding:"14px 16px", background:"none", border:"none", borderBottom: i < eleves.length-1 ? "1px solid #f5f5f5" : "none", cursor:"pointer", textAlign:"left" }}>
+                  <Av fn={e.prenom} ln={e.nom} size={42} idx={i} />
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ margin:"0 0 3px", fontSize:14, fontWeight:700, color:"#1a1a1a" }}>{e.prenom} {e.nom}</p>
+                    <p style={{ margin:0, fontSize:12, color:"#aaa", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                      {e.cours.map(function(id) { var c = COURS.find(function(x) { return x.id === id; }); return c ? c.nom : null; }).filter(Boolean).join(", ")}
+                    </p>
+                  </div>
+                  <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 9px", borderRadius:20, fontSize:11, fontWeight:700, background:pb.bg, color:pb.c }}>
+                    <span style={{ width:5, height:5, borderRadius:"50%", background:pb.d, display:"inline-block" }} />
+                    {pb.l}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <Modal open={!!sel} onClose={function() { setSel(null); }} dark={false}>
+          {sel && (
+            <div style={{ padding:20 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:20 }}>
+                <Av fn={sel.prenom} ln={sel.nom} size={52} idx={0} />
+                <div style={{ flex:1 }}>
+                  <p style={{ margin:"0 0 4px", fontWeight:900, fontSize:18, color:"#1a1a1a" }}>{sel.prenom} {sel.nom}</p>
+                  <p style={{ margin:0, fontSize:13, color:"#aaa" }}>{sel.email}</p>
+                </div>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
+                {[{l:"Telephone",v:sel.phone},{l:"Dossier",v:getDossierStatus(dossiers, sel.id).ok + "/" + getDossierStatus(dossiers, sel.id).total}].map(function(x) {
+                  return (
+                    <div key={x.l} style={{ background:"#f8f8f8", borderRadius:10, padding:"10px 12px" }}>
+                      <p style={{ margin:"0 0 2px", fontSize:10, color:"#aaa", textTransform:"uppercase", letterSpacing:"0.06em" }}>{x.l}</p>
+                      <p style={{ margin:0, fontSize:13, color:"#1a1a1a", fontWeight:700 }}>{x.v}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              <p style={{ fontSize:11, fontWeight:700, color:"#aaa", textTransform:"uppercase", marginBottom:8, letterSpacing:"0.06em" }}>Cours inscrits</p>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:20 }}>
+                {sel.cours.map(function(id) { var c = COURS.find(function(x) { return x.id === id; }); return c ? <span key={id} style={{ padding:"5px 12px", borderRadius:20, background:"#f4f4f4", color:"#555", fontSize:12, fontWeight:600 }}>{c.nom}</span> : null; })}
+              </div>
+              <button onClick={function() { setSel(null); setSelConv(sel.id); setTab("messages"); }}
+                style={{ width:"100%", padding:"12px", borderRadius:11, border:"none", background:"#1a1a1a", color:"#fff", fontSize:13, fontWeight:800, cursor:"pointer" }}>
+                Envoyer un message
+              </button>
+            </div>
+          )}
+        </Modal>
+      </div>
+    );
+  }
+
+  function renderAdminPage() {
+    if (tab === "dashboard")    return React.createElement(Dashboard, {});
+    if (tab === "inscriptions") return React.createElement(Inscriptions, {});
+    if (tab === "evenements")   return React.createElement(Evenements, {});
+    if (tab === "messages")     return React.createElement(AdminMessages, {});
+    if (tab === "eleves")       return React.createElement(ElevesAdmin, {});
+    return React.createElement(Dashboard, {});
+  }
+
+  return (
+    <div style={{ height:"100vh", display:"flex", flexDirection:"column", overflow:"hidden", fontFamily:"DM Sans, sans-serif" }}>
+      <Toast t={toast} />
+      <div style={{ background:"#1a1a1a", padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <OptimaLogo size={80} />
+          <span style={{ fontSize:11, color:"rgba(255,255,255,.3)", fontFamily:"DM Sans, sans-serif", fontWeight:600, letterSpacing:"0.04em" }}>Admin</span>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+          <p style={{ margin:0, fontSize:10, color:"rgba(255,255,255,.2)", letterSpacing:"0.1em" }}>by Optima</p>
+          <button onClick={onLogout} style={{ fontSize:11, color:"rgba(255,255,255,.3)", background:"none", border:"none", cursor:"pointer" }}>Deco</button>
+        </div>
+      </div>
+      <div style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column" }}>
+        {renderAdminPage()}
+      </div>
+      <div style={{ background:"#fff", borderTop:"1px solid #ebebeb", display:"flex" }}>
+        {ADMIN_TABS.map(function(t, i) {
+          var on = tab === t.id;
+          return (
+            <button key={t.id} onClick={function() { setTab(t.id); }}
+              style={{ flex:1, padding:"10px 4px 8px", border:"none", background:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:3, position:"relative" }}>
+              <div style={{ width:20, height:4, borderRadius:2, background: on ? "#1a1a1a" : "#e5e5e5" }} />
+              <span style={{ fontSize:9, fontWeight: on ? 800 : 500, color: on ? "#1a1a1a" : "#aaa", textTransform:"uppercase", letterSpacing:"0.04em" }}>{t.label}</span>
+              {t.badge > 0 && <div style={{ position:"absolute", top:6, right:"calc(50% - 16px)", background:"#ef4444", color:"#fff", fontSize:9, fontWeight:800, padding:"1px 5px", borderRadius:20 }}>{t.badge}</div>}
+              {on && <div style={{ position:"absolute", bottom:0, left:"50%", transform:"translateX(-50%)", width:20, height:2, background:"#1a1a1a", borderRadius:"2px 2px 0 0" }} />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---- LOGIN -----------------------------------------------------------------
+
+function LoginScreen(props) {
+  var onLoginAdh = props.onLoginAdh; var onLoginAdmin = props.onLoginAdmin;
+  var s0 = useState("choice"); var mode = s0[0]; var setMode = s0[1];
+  var s1 = useState(""); var email = s1[0]; var setEmail = s1[1];
+  var s2 = useState(""); var pw = s2[0]; var setPw = s2[1];
+  var s3 = useState(""); var err = s3[0]; var setErr = s3[1];
+  var s4 = useState(false); var loading = s4[0]; var setLoading = s4[1];
+
+  function login(isAdmin) {
+    setLoading(true); setErr("");
+    setTimeout(function() {
+      var ok = isAdmin ? (email === "admin@optima.fr" && pw === "demo1234") : (email === "emma@gmail.com" && pw === "1234");
+      if (ok) { isAdmin ? onLoginAdmin() : onLoginAdh(); }
+      else { setErr("Identifiants incorrects."); setLoading(false); }
+    }, 700);
+  }
+
+  if (mode === "choice") {
+    return (
+      <div style={{ minHeight:"100vh", background:"#080808", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24 }}>
+        <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,.04) 0%,transparent 60%)", pointerEvents:"none" }} />
+        <div style={{ marginBottom:48, textAlign:"center" }}>
+          <OptimaLogo size={160} />
+        </div>
+        <div style={{ width:"100%", maxWidth:340, display:"flex", flexDirection:"column", gap:12 }}>
+          <button onClick={function() { setMode("adherent"); }}
+            style={{ padding:"18px 24px", borderRadius:16, border:"1px solid rgba(255,255,255,.12)", background:"rgba(255,255,255,.04)", cursor:"pointer", textAlign:"left", display:"flex", alignItems:"center", gap:16 }}>
+            <div style={{ width:44, height:44, borderRadius:12, background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <div style={{ width:18, height:18, borderRadius:"50%", background:"rgba(255,255,255,.5)" }} />
+            </div>
+            <div>
+              <p style={{ margin:"0 0 2px", fontWeight:700, fontSize:16, color:"#fff" }}>Espace Adherent</p>
+              <p style={{ margin:0, fontSize:12, color:"rgba(255,255,255,.35)" }}>Parents, eleves, adultes</p>
+            </div>
+          </button>
+          <button onClick={function() { setMode("admin"); }}
+            style={{ padding:"18px 24px", borderRadius:16, border:"1px solid rgba(255,255,255,.08)", background:"transparent", cursor:"pointer", textAlign:"left", display:"flex", alignItems:"center", gap:16 }}>
+            <div style={{ width:44, height:44, borderRadius:12, background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.08)", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <div style={{ width:18, height:4, borderRadius:2, background:"rgba(255,255,255,.3)" }} />
+            </div>
+            <div>
+              <p style={{ margin:"0 0 2px", fontWeight:700, fontSize:16, color:"rgba(255,255,255,.7)" }}>Administration</p>
+              <p style={{ margin:0, fontSize:12, color:"rgba(255,255,255,.25)" }}>Directrice, professeurs</p>
+            </div>
+          </button>
+        </div>
+        <p style={{ position:"absolute", bottom:24, fontSize:10, color:"rgba(255,255,255,.1)", letterSpacing:"0.12em" }}>by Optima</p>
+      </div>
+    );
+  }
+
+  var isAdmin = mode === "admin";
+  var inp = { width:"100%", padding:"13px 16px", borderRadius:12, border:"1px solid rgba(255,255,255,.1)", background:"rgba(255,255,255,.05)", color:"#fff", fontSize:14, outline:"none", boxSizing:"border-box", fontFamily:"DM Sans, sans-serif" };
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#080808", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24 }}>
+      <button onClick={function() { setMode("choice"); setErr(""); setEmail(""); setPw(""); }}
+        style={{ position:"absolute", top:20, left:20, background:"none", border:"none", color:"rgba(255,255,255,.4)", fontSize:24, cursor:"pointer" }}>{"<"}</button>
+      <div style={{ width:"100%", maxWidth:340 }}>
+        <div style={{ textAlign:"center", marginBottom:28 }}>
+          <div style={{ marginBottom:8, textAlign:"center" }}>
+            <OptimaLogo size={140} />
+          </div>
+          <p style={{ fontSize:13, color:"rgba(255,255,255,.35)", margin:0, textAlign:"center" }}>{isAdmin ? "Espace Administration" : "Espace Adherent"}</p>
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:12, marginBottom:16 }}>
+          <input type="email" value={email} onChange={function(e) { setEmail(e.target.value); }} placeholder={isAdmin ? "admin@optima.fr" : "emma@gmail.com"} style={inp} />
+          <input type="password" value={pw} onChange={function(e) { setPw(e.target.value); }} placeholder="Mot de passe" style={inp} />
+        </div>
+        {err && <p style={{ fontSize:12, color:"#f87171", textAlign:"center", marginBottom:12 }}>Identifiants incorrects</p>}
+        <button onClick={function() { login(isAdmin); }} disabled={loading}
+          style={{ width:"100%", padding:"14px", borderRadius:12, border:"none", background: loading ? "rgba(255,255,255,.2)" : "#fff", color: loading ? "rgba(0,0,0,.4)" : "#080808", fontSize:15, fontWeight:800, cursor: loading ? "not-allowed" : "pointer" }}>
+          {loading ? "Connexion..." : "Se connecter"}
+        </button>
+        <p style={{ textAlign:"center", fontSize:11, color:"rgba(255,255,255,.2)", marginTop:14 }}>
+          {isAdmin ? "admin@optima.fr / demo1234" : "emma@gmail.com  /  1234"}
+        </p>
+        <p style={{ textAlign:"center", fontSize:10, color:"rgba(255,255,255,.12)", letterSpacing:"0.12em", marginTop:20 }}>by Optima</p>
+      </div>
+    </div>
+  );
+}
+
+// ---- ROOT ------------------------------------------------------------------
+
+function App() {
+  var s = useState("login"); var screen = s[0]; var setScreen = s[1];
+
+  useEffect(function() {
+    var el = document.createElement("style");
+    el.textContent = CSS_RULES;
+    document.head.appendChild(el);
+    return function() { try { document.head.removeChild(el); } catch(e) {} };
+  }, []);
+
+  if (screen === "login")    return React.createElement(LoginScreen, { onLoginAdh:function() { setScreen("adherent"); }, onLoginAdmin:function() { setScreen("admin"); } });
+  if (screen === "adherent") return React.createElement(AppAdherent, { onLogout:function() { setScreen("login"); } });
+  if (screen === "admin")    return React.createElement(AppAdmin, { onLogout:function() { setScreen("login"); } });
+  return null;
+}
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>
